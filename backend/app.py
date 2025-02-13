@@ -12,8 +12,8 @@ CORS(app)
 @app.route('/api/stock_data', methods=['GET'])
 def get_stock_data():
     company_name = request.args.get('name')
-    period = request.args.get('period', '1mo')
-    interval = request.args.get('interval', '1d')
+    period = request.args.get('period', '1d')
+    interval = request.args.get('interval', '1h')
 
     if not company_name:
         return jsonify({'error': 'Musisz podać nazwę firmy lub ticker.'}), 400

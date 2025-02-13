@@ -4,8 +4,8 @@ import { Inter } from 'next/font/google'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Analiza Akcji',
-  description: 'Wykresy i analiza akcji',
+  title: 'Analiza Firm',
+  description: 'Aplikacja do analizowania firmy',
 }
 
 export default function RootLayout({ children }) {
