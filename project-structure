@@ -1,0 +1,16 @@
+backend/
+├── app.py <-- główna strona obsługująca api requesty
+├── utils.py <-- obsługuje funkcję do scrapowania i sprawdzania danych na yfinance
+├── backend-readme.txt <-- przewodnik po backendzie
+
+frontend/
+├── src/
+│   ├── app/
+│   │   ├── page.js       <-- Strona główna
+│   │   ├── layout.js
+│   │   └── globals.css
+│   ├── components/
+│   │   └── StockChart.js  <-- Komponent wykresu
+│   └── lib/
+│       └── api.js       <-- Funkcje do komunikacji z API
+└── ...
