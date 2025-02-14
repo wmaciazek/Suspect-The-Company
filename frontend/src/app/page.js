@@ -14,6 +14,7 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const [period, setPeriod] = useState('1mo'); 
   const [interval, setInterval] = useState('1d'); 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -30,16 +31,29 @@ const HomePage = () => {
     }
   };
 
-  const handlePeriodChange = (e) => {
-    setPeriod(e.target.value);
+ const handlePeriodChange = (e) => {
+    const newPeriod = e.target.value;
+    setPeriod(newPeriod);
+
+    // okres>5d to interval 1d
+    if (!['1d', '5d'].includes(newPeriod)) {
+      setInterval('1d');
+    }
   };
 
-  const handleIntervalChange = (e) => {
-    setInterval(e.target.value);
-  };
+    const handleIntervalChange = (e) => {
+        const newInterval = e.target.value;
+        setInterval(newInterval);
+
+        // jesli interwal <1d to period 5d
+        if (['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h'].includes(newInterval)) {
+        setPeriod('5d');
+        }
+    };
+
 
   return (
-    <main className="p-4">
+    <main className="p-4 bg-gray-900 text-gray-100 min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Analiza Akcji</h1>
       <form onSubmit={handleSubmit} className="mb-4">
         <input
@@ -47,12 +61,16 @@ const HomePage = () => {
           value={companyName}
           onChange={(e) => setCompanyName(e.target.value)}
           placeholder="Wpisz nazwę firmy lub ticker"
-          className="border p-2 rounded mr-2"
+          className="border p-2 rounded mr-2 bg-gray-700 text-white placeholder-gray-400"
         />
-
-        <label htmlFor="period" className="mr-2">
+        <label htmlFor="period" className="block text-sm font-medium text-gray-300">
           Okres:
-          <select id="period" value={period} onChange={handlePeriodChange} className="border p-2 rounded">
+          <select
+            id="period"
+            value={period}
+            onChange={handlePeriodChange}
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+          >
             <option value="1d">1 dzień</option>
             <option value="5d">5 dni</option>
             <option value="1mo">1 miesiąc</option>
@@ -62,14 +80,18 @@ const HomePage = () => {
             <option value="2y">2 lata</option>
             <option value="5y">5 lat</option>
             <option value="10y">10 lat</option>
-            <option value="ytd">Od początku roku (YTD)</option>
+            <option value="ytd">Od początku roku</option>
             <option value="max">Maksimum</option>
           </select>
         </label>
-
-        <label htmlFor="interval">
+        <label htmlFor="interval" className="block text-sm font-medium text-gray-300">
           Interwał:
-          <select id="interval" value={interval} onChange={handleIntervalChange} className="border p-2 rounded">
+          <select
+            id="interval"
+            value={interval}
+            onChange={handleIntervalChange}
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+          >
             <option value="1m">1 minuta</option>
             <option value="2m">2 minuty</option>
             <option value="5m">5 minut</option>
@@ -85,13 +107,15 @@ const HomePage = () => {
             <option value="3mo">3 miesiące</option>
           </select>
         </label>
-
-        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        <button
+          type="submit"
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
           Szukaj
         </button>
       </form>
 
-      {loading && <p>Ładowanie...</p>}
+      {loading && <p className="text-gray-300">Ładowanie...</p>}
       {error && <p className="text-red-500">Błąd: {error}</p>}
 
       {stockData && stockData.stockData.length > 0 && (

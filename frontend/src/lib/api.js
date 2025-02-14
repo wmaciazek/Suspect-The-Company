@@ -1,5 +1,3 @@
-// Funkcje do komunikacji z API (backendem)
-
 const API_BASE_URL = 'http://127.0.0.1:5000/api'; 
 
 export async function fetchStockData(companyName, period = '1mo', interval = '1d') {
