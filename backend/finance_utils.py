@@ -5,11 +5,10 @@ import re
 import pandas as pd
 
 def is_valid_ticker(ticker):
-    """Czy to ticker!?"""
+    #walidacja tickera
     return bool(re.match(r'^[A-Z0-9\.\-]+(?:\.[A-Z]{2,})?$', ticker))
 
 def get_ticker_from_yahoo(company_name):
-    """Scrapowanie strony Yahoo Finance"""
     url = f'https://finance.yahoo.com/lookup?s={company_name}'
     try:
         headers = {
@@ -19,7 +18,7 @@ def get_ticker_from_yahoo(company_name):
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        results = soup.find_all('tr')  
+        results = soup.find_all('tr')
         if not results:
             return None
 
@@ -32,7 +31,7 @@ def get_ticker_from_yahoo(company_name):
                 ticker = ticker_cell.text.strip()
                 name = name_cell.text.strip()
 
-                if '.' in ticker:  
+                if '.' in ticker:
                     if company_name.lower() in name.lower():
                         return ticker
 
@@ -47,10 +46,15 @@ def get_ticker_from_yahoo(company_name):
 
 def get_stock_data_from_yfinance(ticker, period='1mo', interval='1d', retry_ticker=None):
     try:
-        print(f"Pobieram dane dla: {ticker}")
+        print(f"Pobieram dane dla: {ticker}, period: {period}, interval: {interval}")  
         data = yf.download(ticker, period=period, interval=interval)
+        print(f"yf.download() returned: data.shape={data.shape}")  
+        print(f"yf.download() returned: data.index.min()={data.index.min() if not data.empty else 'EMPTY'}")  
+        print(f"yf.download() returned: data.index.max()={data.index.max() if not data.empty else 'EMPTY'}")  
+        print(f"yf.download() returned: data.head()=\n{data.head()}")
+
         if data.empty:
-            raise ValueError(f"yfinance nie znalazl danych dla tickera '{ticker}'.")
+            raise ValueError(f"dane puste dla tickera '{ticker}'.")
 
         data = data.reset_index()
         if isinstance(data.columns, pd.MultiIndex):
@@ -58,7 +62,7 @@ def get_stock_data_from_yfinance(ticker, period='1mo', interval='1d', retry_tick
 
         close_col = next((col for col in data.columns if 'close' in col.lower()), None)
         if not close_col:
-            raise KeyError("brak kolumny 'close'")
+            raise KeyError("blad kolumn")
 
         data_json = data.to_dict(orient='records')
         sma_json = data[close_col].rolling(window=50).mean().dropna().reset_index().to_dict(orient='records')
@@ -66,14 +70,36 @@ def get_stock_data_from_yfinance(ticker, period='1mo', interval='1d', retry_tick
         return {'ticker': ticker, 'stockData': data_json, 'smaData': sma_json}
 
     except (ValueError, KeyError) as e:
-        print(f"yfinance blad przy ({ticker}): {e}")
+        print(f"blad pobierania ({ticker}): {e}")
         if retry_ticker:
-            print(f"probuje jeszcze raz: {retry_ticker}")
+            print(f"ponowne pobieranie: {retry_ticker}")
             try:
-                return get_stock_data_from_yfinance(retry_ticker, period, interval)
+                return get_stock_data_from_yfinance(retry_ticker, period, interval) 
             except Exception:
-                raise ValueError(f"Nie udalo sie pobrac danych dla {ticker} / {retry_ticker}.")
+                raise ValueError(f"blad pobierania danych dla {ticker}")
         raise
     except Exception as e:
-        print(f"yfinance blad przy ({ticker}): {e}")
+        print(f"blad pobierania ({ticker}): {e}")
         raise
+
+def get_stock_data(company_name, period='1mo', interval='1d'):
+    ticker = None
+
+    # sprawdzanie czy ticker
+    if is_valid_ticker(company_name):
+        ticker = company_name
+        print(f"'{company_name}' to ticker.")
+
+    # scrapowanie
+    if not ticker:
+        ticker = get_ticker_from_yahoo(company_name)
+        print(f"Yahoo Finance: {ticker}")
+
+    if not ticker:
+        return None  
+
+    try:
+        return get_stock_data_from_yfinance(ticker, period, interval)
+    except Exception as e:
+        print(f"blad pobierania '{ticker}': {e}")
+        return None
