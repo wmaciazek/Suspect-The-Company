@@ -12,8 +12,8 @@ const HomePage = () => {
   const [stockData, setStockData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [period, setPeriod] = useState('1mo'); // Domyślny okres
-  const [interval, setInterval] = useState('1d'); // Domyślny interwał
+  const [period, setPeriod] = useState('1mo'); 
+  const [interval, setInterval] = useState('1d'); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,27 +31,25 @@ const HomePage = () => {
     }
   };
 
-  // POPRAWIONA handlePeriodChange
  const handlePeriodChange = (e) => {
     const newPeriod = e.target.value;
-    setPeriod(newPeriod); //Zawsze zmieniamy period
+    setPeriod(newPeriod);
 
-    // Jeśli okres jest *dłuższy* niż 5 dni, ustaw interwał na 1d
+    // okres>5d to interval 1d
     if (!['1d', '5d'].includes(newPeriod)) {
       setInterval('1d');
     }
   };
 
-  // POPRAWIONA handleIntervalChange
-  const handleIntervalChange = (e) => {
-    const newInterval = e.target.value;
-    setInterval(newInterval); //Zawsze zmieniamy interval.
+    const handleIntervalChange = (e) => {
+        const newInterval = e.target.value;
+        setInterval(newInterval);
 
-    // Automatycznie ustaw okres na '5d', *tylko* jeśli interwał jest < 1d
-    if (['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h'].includes(newInterval)) {
-      setPeriod('5d');
-    }
-  };
+        // jesli interwal <1d to period 5d
+        if (['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h'].includes(newInterval)) {
+        setPeriod('5d');
+        }
+    };
 
 
   return (

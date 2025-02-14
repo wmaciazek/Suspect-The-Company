@@ -18,10 +18,11 @@ const StockChart = ({ stockData, smaData }) => {
     Date: new Date(row[dateCol])
   }));
 
-    const formattedSmaData = smaData.map(row => ({
+  const formattedSmaData = smaData.map(row => ({
     ...row,
-    Date: new Date(row.Date_)
-    }));
+    Date: new Date(row.Date_)  
+  }));
+
 
   const trace1 = {
     type: 'scatter',
@@ -29,26 +30,25 @@ const StockChart = ({ stockData, smaData }) => {
     name: 'Cena akcji',
     x: formattedStockData.map(row => row.Date),
     y: formattedStockData.map(row => row[closeCol]),
-    line: { color: 'lightblue', width: 1 },
+    line: { color: 'lightblue', width: 1 }, 
     hovertemplate: `<b>Cena: %{y:.2f} PLN</b><br>%{x}<extra></extra>`,
   };
-
-    const trace2 = {
+  const trace2 = {
     type: 'scatter',
-    mode: 'lines',  // Tylko linia, bez znaczników
+    mode: 'lines', 
     name: 'SMA 50',
     x: formattedSmaData.map(row => row.Date),
     y: formattedSmaData.map(row => row.SMA_50),
-    line: { color: 'orange', width: 2 } // Niebieska linia
-};
+    line: { color: 'orange', width: 2 } 
+  };
 
   const layout = {
-    title: `Wykres - ${stockData.ticker}`,
+    title: `Wykres`,  
     xaxis: {
         title: 'Data',
         type: 'date',
         tickformat: '%Y-%m-%d %H:%M',
-        autorange: true,
+        autorange: true, 
         showgrid: true,
         gridcolor: '#444',
         zeroline: false,
@@ -61,9 +61,9 @@ const StockChart = ({ stockData, smaData }) => {
       gridcolor: '#444',
       zeroline: false,
     },
-    showlegend: true,
-    plot_bgcolor: '#222',
-    paper_bgcolor: '#222',
+    showlegend: true, 
+    plot_bgcolor: '#222',  
+    paper_bgcolor: '#222', 
     font: { color: '#eee' }
   };
 
