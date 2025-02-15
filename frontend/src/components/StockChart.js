@@ -31,7 +31,7 @@ const StockChart = ({ stockData, smaData }) => {
     x: formattedStockData.map(row => row.Date),
     y: formattedStockData.map(row => row[closeCol]),
     line: { color: 'lightblue', width: 1 }, 
-    hovertemplate: `<b>Cena: %{y:.2f} PLN</b><br>%{x}<extra></extra>`,
+    hovertemplate: `<b>Cena: %{y:.2f} USD</b><br>%{x}<extra></extra>`,
   };
   const trace2 = {
     type: 'scatter',
@@ -54,7 +54,7 @@ const StockChart = ({ stockData, smaData }) => {
         zeroline: false,
     },
     yaxis: {
-      title: 'Cena (PLN)',
+      title: 'Cena (USD)',
       autorange: true,
       fixedrange: false,
       showgrid: true,

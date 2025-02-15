@@ -1,8 +1,9 @@
 import './globals.css';
 import { Inter } from 'next/font/google';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider } from '@/providers/AuthProvider';
 import UserInfo from '@/components/UserInfo'; 
 import Link from 'next/link';
+import LoggedProvider from '@/providers/LoggedProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
@@ -27,6 +28,20 @@ export default function RootLayout({ children }) {
                   </Link>
                 </li>
               </ul>
+              <LoggedProvider>
+              <ul className="flex space-x-4">
+                <li>
+                  <Link href="/" className="hover:text-blue-500">
+                      Zapisane Firmy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/history" className="hover:text-blue-500">
+                      Historia Wyszukiwań
+                  </Link>
+                </li>
+              </ul>
+              </LoggedProvider>
               <UserInfo /> 
             </div>
           </nav>

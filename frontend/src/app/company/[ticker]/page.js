@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { fetchStockData } from '@/lib/api';
 import dynamic from 'next/dynamic';
 
@@ -9,12 +9,13 @@ const StockChart = dynamic(() => import('@/components/StockChart'), {
 });
 
 const CompanyDetails = () => {
-  const { ticker } = useParams();
+  const { ticker: companyName } = useParams(); 
+  const searchParams = useSearchParams();
+  const ticker = searchParams.get('ticker');
   const [stockData, setStockData] = useState(null);
   const [error, setError] = useState(null);
   const [period, setPeriod] = useState('5d'); 
   const [interval, setInterval] = useState('1d'); 
-
 
   const handlePeriodChange = (e) => {
     const newPeriod = e.target.value;
@@ -69,7 +70,7 @@ const CompanyDetails = () => {
 
   return (
     <div className="p-4 bg-gray-900 text-gray-100 min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Szczegóły Firmy: {ticker}</h1>
+      <h1 className="text-2xl font-bold mb-4">Szczegóły Firmy: {companyName} Ticker: {stockData?.ticker}</h1>
 
         <label htmlFor="period"  className="block text-sm font-medium text-gray-300">
             Okres:

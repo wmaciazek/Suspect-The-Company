@@ -1,6 +1,6 @@
 'use client'; 
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/providers/AuthProvider';
 
 const UserInfo = () => {
   const { currentUser, signOut } = useAuth();

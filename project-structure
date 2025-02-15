@@ -1,16 +1,6 @@
-backend/
-├── app.py <-- główna strona obsługująca api requesty
-├── utils.py <-- obsługuje funkcję do scrapowania i sprawdzania danych na yfinance
-├── backend-readme.txt <-- przewodnik po backendzie
-
-frontend/
-├── src/
-│   ├── app/
-│   │   ├── page.js       <-- Strona główna
-│   │   ├── layout.js
-│   │   └── globals.css
-│   ├── components/
-│   │   └── StockChart.js  <-- Komponent wykresu
-│   └── lib/
-│       └── api.js       <-- Funkcje do komunikacji z API
-└── ...
+wyszukujesz firme
+na podstawie nazwy firmy scrapowany jest ticker z yahoo finance
+sciagane sa dane finansowe po tickerze 
+pozniej przewalutowanie na usd 
+wyswietlenie na frontendzie po wykresie 
+w miedzyczasie wyszukiwanie dodaje sie do historii wyszukiwan jesli jestes logged 
