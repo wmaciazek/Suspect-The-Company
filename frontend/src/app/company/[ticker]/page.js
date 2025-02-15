@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { fetchStockData } from '@/lib/api';
 import dynamic from 'next/dynamic';
+import CompanyInfo from '@/components/CompanyInfo';
 
 const StockChart = dynamic(() => import('@/components/StockChart'), {
   ssr: false,
@@ -71,7 +72,7 @@ const CompanyDetails = () => {
   return (
     <div className="p-4 bg-gray-900 text-gray-100 min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Szczegóły Firmy: {companyName} Ticker: {stockData?.ticker}</h1>
-
+        {companyName != 'undefined' &&  <CompanyInfo ticker={stockData?.ticker} companyName={companyName}/>      }
         <label htmlFor="period"  className="block text-sm font-medium text-gray-300">
             Okres:
             <select id='period' value={period} onChange={handlePeriodChange} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">

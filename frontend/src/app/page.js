@@ -10,7 +10,7 @@ const HomePage = () => {
     const [haveAccount, setHaveAccount] = useState(true);
     const { currentUser, signOut } = useAuth();
   return (
-    <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center pt-10">
+    <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center">
       <div className="text-center mb-10">
         <h1 className="text-4xl sm:text-6xl font-bold tracking-wider">
           Suspect The Company
