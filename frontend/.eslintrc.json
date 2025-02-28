@@ -1,0 +1,9 @@
+{
+    "extends": [
+      "next/core-web-vitals",
+      "plugin:prettier/recommended"
+    ],
+    "rules": {
+      // Dodaj tutaj własne reguły ESLint, jeśli potrzebujesz
+    }
+  }

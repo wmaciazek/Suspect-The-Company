@@ -3,14 +3,14 @@ import Plot from 'react-plotly.js';
 
 const StockChart = ({ stockData, smaData }) => {
   if (!stockData || stockData.length === 0) {
-    return <div>Brak danych do wyświetlenia.</div>;
+    return <div>brak danych</div>;
   }
 
   const closeCol = Object.keys(stockData[0]).find(key => key.toLowerCase().includes('close'));
   const dateCol = Object.keys(stockData[0]).find(key => key.toLowerCase().includes('date'));
 
   if (!closeCol || !dateCol) {
-    return <div>Błąd: Brak wymaganych kolumn w danych (Close, Date).</div>;
+    return <div>brak kolumn -- blad</div>;
   }
 
   const formattedStockData = stockData.map(row => ({

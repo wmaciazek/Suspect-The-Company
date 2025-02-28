@@ -44,10 +44,10 @@ const CompanyInfo = ({ ticker, companyName }) => {
   }
 
   return (
-    <div className="bg-gray-800 p-4 rounded shadow text-gray-200">
-      <h2 className="text-xl font-bold mb-2">Informacje o firmie</h2>
-      <p>{companyInfo}</p>
-    </div>
+  <div className="bg-gray-800 p-4 rounded shadow text-gray-200">
+    <h2 className="text-xl font-bold mb-2">Informacje o firmie</h2>
+    <p>{companyInfo}</p>
+  </div>
   );
 };
 
