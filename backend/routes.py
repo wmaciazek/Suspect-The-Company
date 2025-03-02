@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from finance_utils import get_stock_data_by_ticker, get_stock_data_by_company_name
+from finance_charts_utils import get_stock_data_by_ticker, get_stock_data_by_company_name
 
 routes = Blueprint('routes', __name__)
 
