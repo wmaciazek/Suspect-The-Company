@@ -62,4 +62,14 @@ async function getCompanyDescription(ticker, companyName) {
     }
 }
 
-export { getCompanyDescription }; 
+export async function fetchFinancialIndicators(ticker) {
+  const url = `${API_BASE_URL}/indicators?ticker=${ticker}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Nieznany błąd.');
+  }
+  return await response.json();
+}
+
+export { getCompanyDescription };

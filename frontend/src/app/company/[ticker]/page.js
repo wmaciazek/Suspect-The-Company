@@ -4,7 +4,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { fetchStockData, fetchStockDataInComponent } from '@/lib/api';
 import dynamic from 'next/dynamic';
 import CompanyInfo from '@/components/CompanyInfo';
-import Markup from '@/components/Markup';
+import Indicators from '@/components/Indicators';
 
 const StockChart = dynamic(() => import('@/components/StockChart'), {
   ssr: false,
@@ -115,9 +115,9 @@ const CompanyDetails = () => {
 
         {stockData ? (
             stockData.stockData.length > 0 ? (
-            <div className='flex flex-row space-y-4'>
+            <div className='mt-5 flex flex-row space-y-4'>
               <StockChart stockData={stockData.stockData} smaData={stockData.smaData} />
-              <Markup/> 
+              <Indicators ticker={stockData?.ticker}/>
             </div>
             ) : (
             <div>Brak danych dla podanego okresu/interwału</div>
