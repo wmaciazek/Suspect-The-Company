@@ -115,7 +115,7 @@ const CompanyDetails = () => {
 
         {stockData ? (
             stockData.stockData.length > 0 ? (
-            <div className='mt-5 flex flex-row space-y-4'>
+            <div className='mt-5'>
               <StockChart stockData={stockData.stockData} smaData={stockData.smaData} />
               <Indicators ticker={stockData?.ticker}/>
             </div>
