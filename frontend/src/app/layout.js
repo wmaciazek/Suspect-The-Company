@@ -7,8 +7,8 @@ import LoggedProvider from '@/providers/LoggedProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'Analiza Akcji',
-  description: 'Wykresy i analiza akcji',
+  title: 'Strona-Projekt Analiza Firm',
+  description: 'Wykresy, analiza akcji i informacje o firmach',
 };
 
 export default function RootLayout({ children }) {
@@ -30,11 +30,6 @@ export default function RootLayout({ children }) {
               </ul>
               <LoggedProvider>
               <ul className="flex space-x-4">
-                <li>
-                  <Link href="/" className="hover:text-blue-500">
-                      Zapisane Firmy
-                  </Link>
-                </li>
                 <li>
                   <Link href="/history" className="hover:text-blue-500">
                       Historia Wyszukiwań

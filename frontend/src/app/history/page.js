@@ -21,17 +21,13 @@ const HistoryPage = () => {
     setSearchLoading(true)
     console.log('przekazano', item)
 
-    const trimmedCompanyName = item.companyName.trim();
-    if (!trimmedCompanyName) {
-      return; 
-    }
-
     try {
-      const data = await fetchStockData(trimmedCompanyName); 
+      let type='ticker'
+      const data = await fetchStockData(item.ticker, type); 
 
 
       if (data && data.ticker) { 
-        router.push(`/company/${encodeURIComponent(trimmedCompanyName)}?ticker=${data.ticker}`);; 
+        router.push(`/company/${encodeURIComponent(item.ticker)}?ticker=${data.ticker}`);; 
       } else {
         setError('Nie znaleziono danych dla tej firmy.');
       }
@@ -62,7 +58,7 @@ const HistoryPage = () => {
   }, [currentUser]);
 
   if (authLoading) {
-    return <p className="text-gray-300">Ładowanie stanu uwierzytelnienia...</p>;
+    return <p className="text-gray-300">Uwierzytelnianie...</p>;
   }
 
   if (!currentUser) {
@@ -74,7 +70,7 @@ const HistoryPage = () => {
   }
 
   if (error) {
-    return <p className="text-red-500">Błąd: {error}</p>;
+    return <p className="text-red-500">Blad: {error}</p>;
   }
 
   if (history.length === 0) {

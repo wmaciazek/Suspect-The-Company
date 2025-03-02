@@ -15,17 +15,40 @@ def verify_ticker(ticker, company_name):
         ticker_info = yf.Ticker(ticker)
         short_name = ticker_info.info.get('shortName', '').lower()
         long_name = ticker_info.info.get('longName', '').lower()
-        exchange = ticker_info.info.get('exchange', '')
         
         if company_name.lower() in short_name or company_name.lower() in long_name:
-            return True, exchange == 'WAR'
-        return False, False
+            return True
+        return False
     except Exception as e:
         print(f"Błąd weryfikacji tickera {ticker}: {e}")
-        return False, False
+        return False
 
-def get_ticker_from_yahoo(company_name, prioritize_gpw=False):
-    """Scrapuje stronę wyszukiwania Yahoo Finance i opcjonalnie priorytetyzuje tickery z GPW."""
+def get_ticker_from_gpw(company_name):
+    """Scrapuje stronę GPW w poszukiwaniu tickera."""
+    url = f'https://www.gpw.pl/spolka?isin={company_name}'
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        ticker_element = soup.find("div", {"class": "isin"})
+        if ticker_element:
+            ticker = ticker_element.text.strip()
+            if is_valid_ticker(ticker):
+                print(f"Znaleziono ticker na GPW: {ticker}")
+                return ticker
+        print("Nie znaleziono tickera na GPW.")
+        return None
+
+    except requests.exceptions.RequestException as e:
+        print(f"Błąd scrapowania GPW: {e}")
+        return None
+    except Exception as e:
+        print(f"Inny błąd podczas scrapowania GPW: {e}")
+        return None
+
+def get_ticker_from_yahoo(company_name):
+    """Scrapuje stronę wyszukiwania Yahoo Finance."""
     url = f'https://finance.yahoo.com/lookup?s={company_name}'
     try:
         headers = {
@@ -37,9 +60,9 @@ def get_ticker_from_yahoo(company_name, prioritize_gpw=False):
 
         results = soup.find_all('tr')
         if not results:
+            print("Brak wyników wyszukiwania na Yahoo Finance.")
             return None
 
-        tickers = []
         for result in results:
             cells = result.find_all('td')
             if cells and len(cells) > 1:
@@ -49,21 +72,12 @@ def get_ticker_from_yahoo(company_name, prioritize_gpw=False):
                 ticker = ticker_cell.text.strip()
                 name = name_cell.text.strip()
 
-                is_valid, is_gpw = verify_ticker(ticker, company_name)
-                if is_valid:
-                    if prioritize_gpw and is_gpw:
-                        print(f"Priorytetyzowany ticker GPW: {ticker}")
-                        return ticker
-                    tickers.append((ticker, is_gpw))
-
-        if prioritize_gpw:
-            for ticker, is_gpw in tickers:
-                if is_gpw:
-                    print(f"Znaleziono ticker z GPW: {ticker}")
+                if verify_ticker(ticker, company_name):
+                    print(f"Znaleziono ticker: {ticker} dla firmy: {name}")
                     return ticker
 
-        print(f"Znalezione tickery: {tickers}")
-        return tickers[0][0] if tickers else None
+        print("Nie znaleziono odpowiedniego tickera.")
+        return None
 
     except requests.exceptions.RequestException as e:
         print(f"Błąd scrapowania Yahoo Finance: {e}")
@@ -162,9 +176,11 @@ def get_stock_data_by_ticker(ticker, period='1mo', interval='1d'):
         print(f"Błąd pobierania danych dla '{ticker}': {e}")
         return None
 
-def get_stock_data_by_company_name(company_name, period='1mo', interval='1d', prioritize_gpw=True):
-    ticker = get_ticker_from_yahoo(company_name, prioritize_gpw=prioritize_gpw)
-    print(f"Yahoo Finance: {ticker}")
+def get_stock_data_by_company_name(company_name, period='1mo', interval='1d'):
+    ticker = get_ticker_from_gpw(company_name)
+    if not ticker:
+        ticker = get_ticker_from_yahoo(company_name)
+    print(f"Ticker: {ticker}")
 
     if not ticker:
         return None

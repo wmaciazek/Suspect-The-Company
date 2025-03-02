@@ -58,7 +58,8 @@ const CompanySearch = ({ setLoading, loading }) => {
     try {
       console.log('searching by name')
       let type = 'name'
-      const data = await fetchStockData(trimmedCompanyName, type); // Możesz zmienić to na inną funkcję
+      const data = await fetchStockData(trimmedCompanyName, type); 
+      console.log(data, 'COMPANYSEARCH.JS')
       if (data && data.ticker) {
         if (currentUser) {
           try {
@@ -93,7 +94,7 @@ const CompanySearch = ({ setLoading, loading }) => {
         </div>
         <div className="flex justify-center mt-5">
           <button
-            type="button" // Zmieniamy type na "button"
+            type="button" 
             onClick={handleSearchByTicker}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             disabled={loading}
@@ -101,7 +102,7 @@ const CompanySearch = ({ setLoading, loading }) => {
             Szukaj po Tickerze
           </button>
           <button
-            type="button" // Zmieniamy type na "button"
+            type="button" 
             onClick={handleSearchByName}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold ml-2 py-2 px-4 rounded"
             disabled={loading}

@@ -32,15 +32,11 @@ const CompanyInfo = ({ ticker, companyName }) => {
   }, [ticker]); 
 
   if (loading) {
-    return <p className="text-gray-300">Ładowanie informacji o firmie...</p>;
+    return <p className="text-gray-300">Ładowanie informacji o firmie... (Gemini)</p>;
   }
 
   if (error) {
     return <p className="text-red-500">Błąd: {error}</p>;
-  }
-
-  if (!companyInfo) {
-    return <p className="text-gray-300">Wybierz firmę, aby zobaczyć informacje.</p>; 
   }
 
   return (

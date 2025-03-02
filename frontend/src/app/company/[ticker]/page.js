@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { fetchStockData } from '@/lib/api';
+import { fetchStockData, fetchStockDataInComponent } from '@/lib/api';
 import dynamic from 'next/dynamic';
 import CompanyInfo from '@/components/CompanyInfo';
 
@@ -17,7 +17,7 @@ const CompanyDetails = () => {
   const [error, setError] = useState(null);
   const [period, setPeriod] = useState('5d'); 
   const [interval, setInterval] = useState('1d'); 
-
+  console.log(stockData, '!!!!!!!!!!!!!!!')
   const handlePeriodChange = (e) => {
     const newPeriod = e.target.value;
     if(newPeriod =='1d' && interval == '1d') {
@@ -44,11 +44,14 @@ const CompanyDetails = () => {
   };
 
   useEffect(() => {
+    console.log(stockData, '!!!!!!!!!!!!!!!')
     const fetchData = async () => {
       setError(null);
 
       try {
-        const data = await fetchStockData(ticker, period, interval);
+        console.log('wyszukiwanie do budowania wykresu po', ticker)
+        const data = await fetchStockDataInComponent(ticker, period, interval);
+        console.log('COMPANY/PAGE/DATA', data)
         setStockData(data);
       } catch (err) {
         setError(err.message);
@@ -71,7 +74,7 @@ const CompanyDetails = () => {
 
   return (
     <div className="p-4 bg-gray-900 text-gray-100 min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Szczegóły Firmy: {companyName} Ticker: {stockData?.ticker}</h1>
+      <h1 className="text-2xl font-bold mb-4">Szczegóły Firmy: {stockData?.companyName} Ticker: {stockData?.ticker}</h1>
         {companyName != 'undefined' &&  <CompanyInfo ticker={stockData?.ticker} companyName={companyName}/>      }
         <label htmlFor="period"  className="block text-sm font-medium text-gray-300">
             Okres:
@@ -86,7 +89,7 @@ const CompanyDetails = () => {
                 <option value='5y'>5 lat</option>
                 <option value='10y'>10 lat</option>
                 <option value='ytd'>Od początku roku</option>
-                <option value='max'>Maksimum</option>
+                <option value='max'>Cały dostępny okres</option>
             </select>
         </label>
         <label htmlFor='interval'  className="block text-sm font-medium text-gray-300">
@@ -113,7 +116,7 @@ const CompanyDetails = () => {
             stockData.stockData.length > 0 ? (
             <StockChart stockData={stockData.stockData} smaData={stockData.smaData} />
             ) : (
-            <div>Brak danych do wyświetlenia dla wybranego okresu i interwału.</div>
+            <div>Brak danych dla podanego okresu/interwału</div>
             )
         ) : (
             <div>Ładowanie danych...</div>

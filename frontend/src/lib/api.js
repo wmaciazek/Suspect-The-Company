@@ -3,33 +3,28 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const API_BASE_URL = 'http://127.0.0.1:5000/api'; 
 
 export async function fetchStockData(companyName, type, period = '1mo', interval = '1d') {
-    console.log('API call', type)
-    if(type=='ticker') {
-        console.log('searching by ticker | api')
-        const url = `${API_BASE_URL}/stock_data_by_ticker?name=${encodeURIComponent(companyName)}&period=${encodeURIComponent(period)}&interval=${encodeURIComponent(interval)}`;
-
-        const response = await fetch(url);
-        console.log(response)
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Nieznany błąd.'); 
-        }
-      
-        return await response.json(); 
-    } else if(type=='name') {
-        console.log('searching by name | api')
-        const url = `${API_BASE_URL}/stock_data_by_company_name?name=${encodeURIComponent(companyName)}&period=${encodeURIComponent(period)}&interval=${encodeURIComponent(interval)}`;
-
-        const response = await fetch(url);
-        console.log(response)
-        if (!response.ok) {
-            console.log('blad odpowiedzi')
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Nieznany błąd.'); 
-        }
-      
-        return await response.json(); 
+    let url = `${API_BASE_URL}/stock_data_by_ticker?ticker=${encodeURIComponent(companyName)}&period=${encodeURIComponent(period)}&interval=${encodeURIComponent(interval)}`
+    if(type=='name') {
+        url = `${API_BASE_URL}/stock_data_by_company_name?name=${encodeURIComponent(companyName)}&period=${encodeURIComponent(period)}&interval=${encodeURIComponent(interval)}`;
     }
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Nieznany błąd.'); 
+  }
+  return await response.json(); 
+}
+
+export async function fetchStockDataInComponent(companyName, period = '1mo', interval = '1d') {
+    let url = `${API_BASE_URL}/stock_data_by_ticker?ticker=${encodeURIComponent(companyName)}&period=${encodeURIComponent(period)}&interval=${encodeURIComponent(interval)}`
+    console.log('fetching in component')
+  const response = await fetch(url);
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Nieznany błąd.'); 
+  }
+  return await response.json(); 
 }
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY;
@@ -52,8 +47,8 @@ async function getCompanyDescription(ticker, companyName) {
             - Siedzibę (miasto, kraj),
             - Czym się zajmuje (branża),
             - Giełdę, na której jest notowana
-            Napisz to w maksymalnie 100 słowach. Upewnij się że napewno ticker odpowiada firmie (sprawdź yahoo finance)
-            `;
+            Napisz to w maksymalnie 100 słowach. Upewnij się że napewno ticker odpowiada firmie (sprawdź yahoo finance), jeśli nie będziesz mógl znaleźć to itak szukaj informacji o tickerze
+            na gieldzie w warszawie`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;

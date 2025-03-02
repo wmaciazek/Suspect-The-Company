@@ -26,7 +26,7 @@ const RegisterForm = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log("Zarejestrowano użytkownika:", userCredential.user);
-      alert("Użytkownik został pomyślnie zarejestrowany")
+      alert("Zarejestrowano")
 
     } catch (error) {
       setError(error.message);

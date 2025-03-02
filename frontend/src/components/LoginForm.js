@@ -13,16 +13,16 @@ const LoginForm = () => {
     setError(null);
 
     if (!auth) {
-        setError("Błąd inicjalizacji Firebase Authentication. Sprawdź konfigurację.");
+        setError("Błąd Firebase");
         return;
     }
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log("Zalogowany użytkownik:", userCredential.user);
+      console.log("Zalogowano:", userCredential.user);
     } catch (error) {
       setError(error.message);
-      console.error("Błąd logowania:", error);
+      console.error("Błąd autoryzacji:", error);
     }
   };
 

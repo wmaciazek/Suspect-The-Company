@@ -6,6 +6,8 @@ const StockChart = ({ stockData, smaData }) => {
     return <div>brak danych</div>;
   }
 
+  console.log(stockData);
+
   const closeCol = Object.keys(stockData[0]).find(key => key.toLowerCase().includes('close'));
   const dateCol = Object.keys(stockData[0]).find(key => key.toLowerCase().includes('date'));
 
