@@ -5,12 +5,12 @@ import re
 import pandas as pd
 import time
 
+#CZY TICKER JEST TICKEREM
 def is_valid_ticker(ticker):
-    """Sprawdza, czy ticker wygląda poprawnie (i ma rozszerzenie)."""
     return bool(re.match(r'^[A-Z0-9\.\-]+(?:\.[A-Z]{2,})?$', ticker))
 
+#CZY TICKER == DANA FIRMA
 def verify_ticker(ticker, company_name):
-    """Weryfikuje, czy ticker jest powiązany z daną firmą."""
     try:
         ticker_info = yf.Ticker(ticker)
         short_name = ticker_info.info.get('shortName', '').lower()
@@ -23,8 +23,8 @@ def verify_ticker(ticker, company_name):
         print(f"Błąd weryfikacji tickera {ticker}: {e}")
         return False
 
+#PRIORYTETYZACJA TICKERA DLA GPW/ SCRAPOWANIE STRONY GPW
 def get_ticker_from_gpw(company_name):
-    """Scrapuje stronę GPW w poszukiwaniu tickera."""
     url = f'https://www.gpw.pl/spolka?isin={company_name}'
     try:
         response = requests.get(url)
@@ -40,6 +40,7 @@ def get_ticker_from_gpw(company_name):
         print("Nie znaleziono tickera na GPW.")
         return None
 
+    #LEKKIE SZAMBO Z ERRORAMI
     except requests.exceptions.RequestException as e:
         print(f"Błąd scrapowania GPW: {e}")
         return None
@@ -47,8 +48,8 @@ def get_ticker_from_gpw(company_name):
         print(f"Inny błąd podczas scrapowania GPW: {e}")
         return None
 
+#SCRAPOWANIE YAHOO FINANCE aby dostać Ticker z nazwy Firmy
 def get_ticker_from_yahoo(company_name):
-    """Scrapuje stronę wyszukiwania Yahoo Finance."""
     url = f'https://finance.yahoo.com/lookup?s={company_name}'
     try:
         headers = {
@@ -86,11 +87,8 @@ def get_ticker_from_yahoo(company_name):
         print(f"Inny błąd podczas scrapowania Yahoo Finance: {e}")
         return None
 
+#Wymiana walut aby było USD wyjściowo
 def get_exchange_rate(base_currency, target_currency='USD'):
-    """Pobiera kurs wymiany z API exchangerate-api.com."""
-    if target_currency != 'USD':
-        print('Darmowy plan obsługuje tylko zamianę na USD')
-        return 1
     try:
         url = f'https://api.exchangerate-api.com/v4/latest/{base_currency}'
         response = requests.get(url)
@@ -103,6 +101,7 @@ def get_exchange_rate(base_currency, target_currency='USD'):
             print(f"Brak kursu dla {base_currency} -> {target_currency} w odpowiedzi.")
             return None
 
+    #NIE WYRZUCA ERRORA A POWINNO
     except requests.exceptions.RequestException as e:
         print(f"Błąd żądania do API: {e}")
         return None
@@ -111,15 +110,11 @@ def get_exchange_rate(base_currency, target_currency='USD'):
         return None
 
 def get_stock_data_from_yfinance(ticker, period='1mo', interval='1d', retries=3):
-    """Pobiera dane z yfinance, przelicza na USD, z opcją ponownej próby."""
+    #pobieranie danych z yfinance
     for attempt in range(retries):
         try:
             print(f"Pobieram dane dla: {ticker}, period={period}, interval={interval}")
             data = yf.download(ticker, period=period, interval=interval)
-            print(f"yf.download() returned: data.shape={data.shape}")
-            print(f"yf.download() returned: data.index.min()={data.index.min() if not data.empty else 'EMPTY'}")
-            print(f"yf.download() returned: data.index.max()={data.index.max() if not data.empty else 'EMPTY'}")
-            print(f"yf.download() returned: data.head()=\n{data.head()}")
 
             if data.empty:
                 raise ValueError(f"yfinance nie zwrócił danych dla tickera '{ticker}'.")
@@ -166,6 +161,7 @@ def get_stock_data_from_yfinance(ticker, period='1mo', interval='1d', retries=3)
                 continue
             raise
 
+#informacje giełdowe po tickerze
 def get_stock_data_by_ticker(ticker, period='1mo', interval='1d'):
     try:
         data = get_stock_data_from_yfinance(ticker, period, interval)
@@ -176,6 +172,7 @@ def get_stock_data_by_ticker(ticker, period='1mo', interval='1d'):
         print(f"Błąd pobierania danych dla '{ticker}': {e}")
         return None
 
+#informacje giełdowe po nazwie firmy
 def get_stock_data_by_company_name(company_name, period='1mo', interval='1d'):
     ticker = get_ticker_from_gpw(company_name)
     if not ticker:

@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { fetchStockData, fetchStockDataInComponent } from '@/lib/api';
 import dynamic from 'next/dynamic';
 import CompanyInfo from '@/components/CompanyInfo';
+import Markup from '@/components/Markup';
 
 const StockChart = dynamic(() => import('@/components/StockChart'), {
   ssr: false,
@@ -74,7 +75,7 @@ const CompanyDetails = () => {
 
   return (
     <div className="p-4 bg-gray-900 text-gray-100 min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Szczegóły Firmy: {stockData?.companyName} Ticker: {stockData?.ticker}</h1>
+      <h1 className="text-2xl font-bold mb-4">Ticker: {stockData?.ticker}</h1>
         {companyName != 'undefined' &&  <CompanyInfo ticker={stockData?.ticker} companyName={companyName}/>      }
         <label htmlFor="period"  className="block text-sm font-medium text-gray-300">
             Okres:
@@ -114,7 +115,10 @@ const CompanyDetails = () => {
 
         {stockData ? (
             stockData.stockData.length > 0 ? (
-            <StockChart stockData={stockData.stockData} smaData={stockData.smaData} />
+            <div className='flex flex-row space-y-4'>
+              <StockChart stockData={stockData.stockData} smaData={stockData.smaData} />
+              <Markup/> 
+            </div>
             ) : (
             <div>Brak danych dla podanego okresu/interwału</div>
             )
