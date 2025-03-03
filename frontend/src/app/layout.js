@@ -4,6 +4,8 @@ import { AuthProvider } from '@/providers/AuthProvider';
 import UserInfo from '@/components/UserInfo'; 
 import Link from 'next/link';
 import LoggedProvider from '@/providers/LoggedProvider';
+import { FaChartBar } from 'react-icons/fa';
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
@@ -19,7 +21,7 @@ export default function RootLayout({ children }) {
           <nav className="bg-gray-800 p-4">
             <div className="container mx-auto flex items-center justify-between">
               <Link href="/" className="text-xl font-bold">
-                  Analiza Akcji
+                  Analiza Akcji <FaChartBar className='inline-block bg-blue-500 rounded ml-1 text-white'/>
               </Link>
               <ul className="flex space-x-4">
                 <li>

@@ -13,7 +13,7 @@ const HomePage = () => {
     <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center">
       <div className="text-center mb-10">
         <div className="text-4xl sm:text-6xl font-bold tracking-wider flex">
-         <h1> Suspect The Company </h1><h2 className='ml-3 text-lg sm:text-xl'>On Market</h2>
+         <h1> Suspect The Company </h1><h2 className='ml-3 text-lg sm:text-xl'>On The Market</h2>
         </div>
         <p className="text-lg sm:text-xl text-gray-400 mt-4">
           Analiza akcji i wykresy w jednym miejscu.
