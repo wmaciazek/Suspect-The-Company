@@ -20,7 +20,7 @@ def verify_ticker(ticker, company_name):
             return True
         return False
     except Exception as e:
-        print(f"Błąd weryfikacji tickera {ticker}: {e}")
+        print(f"blad weryfikacji tickera {ticker}: {e}")
         return False
 
 #PRIORYTETYZACJA TICKERA DLA GPW/ SCRAPOWANIE STRONY GPW
@@ -35,17 +35,17 @@ def get_ticker_from_gpw(company_name):
         if ticker_element:
             ticker = ticker_element.text.strip()
             if is_valid_ticker(ticker):
-                print(f"Znaleziono ticker na GPW: {ticker}")
+                print(f"znaleziono ticker na GPW: {ticker}")
                 return ticker
-        print("Nie znaleziono tickera na GPW.")
+        print("brak tickera na gpw.")
         return None
 
     #LEKKIE SZAMBO Z ERRORAMI
     except requests.exceptions.RequestException as e:
-        print(f"Błąd scrapowania GPW: {e}")
+        print(f"blad scrapowania GPW: {e}")
         return None
     except Exception as e:
-        print(f"Inny błąd podczas scrapowania GPW: {e}")
+        print(f"blad scrapowania GPW: {e}")
         return None
 
 #SCRAPOWANIE YAHOO FINANCE aby dostać Ticker z nazwy Firmy
@@ -61,7 +61,7 @@ def get_ticker_from_yahoo(company_name):
 
         results = soup.find_all('tr')
         if not results:
-            print("Brak wyników wyszukiwania na Yahoo Finance.")
+            print("Brak wyników na Yahoo Finance.")
             return None
 
         for result in results:
@@ -77,14 +77,14 @@ def get_ticker_from_yahoo(company_name):
                     print(f"Znaleziono ticker: {ticker} dla firmy: {name}")
                     return ticker
 
-        print("Nie znaleziono odpowiedniego tickera.")
+        print("Nie odnaleziono tickera.")
         return None
 
     except requests.exceptions.RequestException as e:
         print(f"Błąd scrapowania Yahoo Finance: {e}")
         return None
     except Exception as e:
-        print(f"Inny błąd podczas scrapowania Yahoo Finance: {e}")
+        print(f"Błąd scrapowania Yahoo Finance: {e}")
         return None
 
 #Wymiana walut aby było USD wyjściowo
@@ -97,23 +97,20 @@ def get_exchange_rate(base_currency, target_currency='USD'):
 
         if 'rates' in data and target_currency in data['rates']:
             return data['rates'][target_currency]
-        else:
-            print(f"Brak kursu dla {base_currency} -> {target_currency} w odpowiedzi.")
-            return None
 
     #NIE WYRZUCA ERRORA A POWINNO
     except requests.exceptions.RequestException as e:
-        print(f"Błąd żądania do API: {e}")
+        print(f"blad api: {e}")
         return None
     except (KeyError, ValueError) as e:
-        print(f"Błąd przetwarzania odpowiedzi API: {e}")
+        print(f"blad api: {e}")
         return None
 
 def get_stock_data_from_yfinance(ticker, period='1mo', interval='1d', retries=3):
     #pobieranie danych z yfinance
     for attempt in range(retries):
         try:
-            print(f"Pobieram dane dla: {ticker}, period={period}, interval={interval}")
+            print(f"pobieram dane dla: {ticker}, period={period}, interval={interval}")
             data = yf.download(ticker, period=period, interval=interval)
 
             if data.empty:
@@ -125,13 +122,13 @@ def get_stock_data_from_yfinance(ticker, period='1mo', interval='1d', retries=3)
 
             close_col = next((col for col in data.columns if 'close' in col.lower()), None)
             if not close_col:
-                raise KeyError("Nie znaleziono kolumny 'Close' w danych.")
+                raise KeyError("brak 'close'.")
 
             ticker_info = yf.Ticker(ticker)
             try:
                 currency = ticker_info.info['currency']
             except (KeyError, TypeError) as e:
-                print(f"Nie udało się pobrać waluty dla {ticker}, używam domyślnej (USD): {e}")
+                print(f"blad waluty, {e}")
                 currency = 'USD'
             print(f"Waluta dla {ticker}: {currency}")
 

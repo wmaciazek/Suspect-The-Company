@@ -12,9 +12,9 @@ const HomePage = () => {
   return (
     <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center">
       <div className="text-center mb-10">
-        <h1 className="text-4xl sm:text-6xl font-bold tracking-wider">
-          Suspect The Company 
-        </h1>
+        <div className="text-4xl sm:text-6xl font-bold tracking-wider flex">
+         <h1> Suspect The Company </h1><h2 className='ml-3 text-lg sm:text-xl'>On Market</h2>
+        </div>
         <p className="text-lg sm:text-xl text-gray-400 mt-4">
           Analiza akcji i wykresy w jednym miejscu.
         </p>
@@ -38,9 +38,6 @@ const HomePage = () => {
         >
           Nie mam konta
         </button>}
-        <div>
-            <img src="/logo.png" alt="Opis obrazka" className="w-32 h-32 rounded-lg fixed right-5 bottom-5"></img>
-          </div>
         </div>}
     </div>
   );
