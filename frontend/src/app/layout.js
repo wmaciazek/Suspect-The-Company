@@ -20,7 +20,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <nav className="bg-gray-800 p-4">
             <div className="container mx-auto flex items-center justify-between">
-              <Link href="/" className="text-xl font-bold">
+              <Link href="/landing" className="text-xl font-bold">
                   Analiza Akcji <FaChartBar className='inline-block bg-blue-500 rounded ml-1 text-white'/>
               </Link>
               <ul className="flex space-x-4">
