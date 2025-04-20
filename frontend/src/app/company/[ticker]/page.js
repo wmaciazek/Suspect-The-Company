@@ -126,7 +126,11 @@ const CompanyDetails = () => {
       {stockData ? (
         stockData.stockData.length > 0 ? (
           <div className='mt-5'>
-            <StockChart stockData={stockData.stockData} smaData={stockData.smaData} />
+            <StockChart 
+              stockData={stockData.stockData} 
+              period={period} 
+              interval={interval}
+            />
             
             {/* Przycisk do pokazywania predykcji */}
             <div className="mt-4 flex justify-center">
