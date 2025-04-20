@@ -72,4 +72,16 @@ export async function fetchFinancialIndicators(ticker) {
   return await response.json();
 }
 
+// Dodaj tę funkcję do istniejącego pliku api.js
+// Dodaj tę funkcję do istniejącego pliku api.js
+export async function fetchStockPrediction(ticker) {
+  const url = `${API_BASE_URL}/predict_stock?ticker=${encodeURIComponent(ticker)}&periods=120`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Nieznany błąd.');
+  }
+  return await response.json();
+}
+
 export { getCompanyDescription };

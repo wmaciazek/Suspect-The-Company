@@ -1,18 +1,37 @@
+'use client';
 import React from 'react';
-import Plot from 'react-plotly.js';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
 
-const StockChart = ({ stockData, smaData }) => {
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+const StockChart = ({ stockData }) => {
   if (!stockData || stockData.length === 0) {
-    return <div>brak danych</div>;
+    return <div className="text-white">brak danych</div>;
   }
-
-  console.log(stockData);
 
   const closeCol = Object.keys(stockData[0]).find(key => key.toLowerCase().includes('close'));
   const dateCol = Object.keys(stockData[0]).find(key => key.toLowerCase().includes('date'));
 
   if (!closeCol || !dateCol) {
-    return <div>brak kolumn -- blad</div>;
+    return <div className="text-white">brak kolumn -- blad</div>;
   }
 
   const formattedStockData = stockData.map(row => ({
@@ -20,62 +39,89 @@ const StockChart = ({ stockData, smaData }) => {
     Date: new Date(row[dateCol])
   }));
 
-  const formattedSmaData = smaData.map(row => ({
-    ...row,
-    Date: new Date(row.Date_)  
-  }));
-
-
-  const trace1 = {
-    type: 'scatter',
-    mode: 'lines',
-    name: 'Cena akcji',
-    x: formattedStockData.map(row => row.Date),
-    y: formattedStockData.map(row => row[closeCol]),
-    line: { color: 'lightblue', width: 1 }, 
-    hovertemplate: `<b>Cena: %{y:.2f} USD</b><br>%{x}<extra></extra>`,
+  const chartData = {
+    labels: formattedStockData.map(row => {
+      const date = new Date(row.Date);
+      return date.toLocaleDateString('pl-PL', { 
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }),
+    datasets: [
+      {
+        label: 'Cena akcji',
+        data: formattedStockData.map(row => row[closeCol]),
+        borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+        tension: 0.1,
+        pointRadius: 0,
+      }
+    ]
   };
-  const trace2 = {
-    type: 'scatter',
-    mode: 'lines', 
-    name: 'SMA 50',
-    x: formattedSmaData.map(row => row.Date),
-    y: formattedSmaData.map(row => row.SMA_50),
-    line: { color: 'orange', width: 2 } 
-  };
 
-  const layout = {
-    title: `Wykres`,  
-    xaxis: {
-        title: 'Data',
-        type: 'date',
-        tickformat: '%Y-%m-%d %H:%M',
-        autorange: true, 
-        showgrid: true,
-        gridcolor: '#444',
-        zeroline: false,
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
     },
-    yaxis: {
-      title: 'Cena (USD)',
-      autorange: true,
-      fixedrange: false,
-      showgrid: true,
-      gridcolor: '#444',
-      zeroline: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          color: 'white'
+        }
+      },
+      title: {
+        display: true,
+        text: 'Wykres ceny akcji',
+        color: 'white'
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        callbacks: {
+          label: function(context) {
+            return `${context.dataset.label}: ${context.parsed.y.toFixed(2)} USD`;
+          }
+        }
+      }
     },
-    showlegend: true, 
-    plot_bgcolor: '#222',  
-    paper_bgcolor: '#222', 
-    font: { color: '#eee' }
+    scales: {
+      x: {
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)',
+        },
+        ticks: {
+          color: 'white',
+          maxRotation: 45,
+          minRotation: 45
+        }
+      },
+      y: {
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)',
+        },
+        ticks: {
+          color: 'white',
+          callback: function(value) {
+            return value.toFixed(2) + ' USD';
+          }
+        }
+      }
+    }
   };
 
   return (
-    <Plot
-      data={[trace1, trace2]}
-      layout={layout}
-      style={{ width: '100%', height: '400px' }}
-      config={{ responsive: true, displayModeBar: false }}
-    />
+    <div className="bg-gray-800 rounded-lg p-4">
+      <div className="h-[400px]">
+        <Line data={chartData} options={chartOptions} />
+      </div>
+    </div>
   );
 };
 

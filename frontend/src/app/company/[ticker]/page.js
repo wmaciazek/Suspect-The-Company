@@ -5,6 +5,7 @@ import { fetchStockData, fetchStockDataInComponent } from '@/lib/api';
 import dynamic from 'next/dynamic';
 import CompanyInfo from '@/components/CompanyInfo';
 import Indicators from '@/components/Indicators';
+import StockPrediction from '@/components/StockPrediction';
 
 const StockChart = dynamic(() => import('@/components/StockChart'), {
   ssr: false,
@@ -18,7 +19,8 @@ const CompanyDetails = () => {
   const [error, setError] = useState(null);
   const [period, setPeriod] = useState('5d'); 
   const [interval, setInterval] = useState('1d'); 
-  console.log(stockData, '!!!!!!!!!!!!!!!')
+  const [showPrediction, setShowPrediction] = useState(false);
+
   const handlePeriodChange = (e) => {
     const newPeriod = e.target.value;
     if(newPeriod =='1d' && interval == '1d') {
@@ -45,14 +47,11 @@ const CompanyDetails = () => {
   };
 
   useEffect(() => {
-    console.log(stockData, '!!!!!!!!!!!!!!!')
     const fetchData = async () => {
       setError(null);
 
       try {
-        console.log('wyszukiwanie do budowania wykresu po', ticker)
         const data = await fetchStockDataInComponent(ticker, period, interval);
-        console.log('COMPANY/PAGE/DATA', data)
         setStockData(data);
       } catch (err) {
         setError(err.message);
@@ -68,63 +67,89 @@ const CompanyDetails = () => {
   if (error) { 
     return <p className="text-red-500">Błąd: {error}</p>;
   }
-    if (!stockData) { 
-        return <p className="text-gray-300">Ładowanie danych firmy...</p>;
-    }
-
+  
+  if (!stockData) { 
+    return <p className="text-gray-300">Ładowanie danych firmy...</p>;
+  }
 
   return (
     <div className="p-4 bg-gray-900 text-gray-100 min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Ticker: {stockData?.ticker}</h1>
-        {companyName != 'undefined' &&  <CompanyInfo ticker={stockData?.ticker} companyName={companyName}/>      }
-        <label htmlFor="period"  className="block text-sm font-medium text-gray-300">
-            Okres:
-            <select id='period' value={period} onChange={handlePeriodChange} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                <option value='1d'>1 dzień</option> 
-                <option value='5d'>5 dni</option>
-                <option value='1mo'>1 miesiąc</option>
-                <option value='3mo'>3 miesiące</option>
-                <option value='6mo'>6 miesięcy</option>
-                <option value='1y'>1 rok</option>
-                <option value='2y'>2 lata</option>
-                <option value='5y'>5 lat</option>
-                <option value='10y'>10 lat</option>
-                <option value='ytd'>Od początku roku</option>
-                <option value='max'>Cały dostępny okres</option>
-            </select>
-        </label>
-        <label htmlFor='interval'  className="block text-sm font-medium text-gray-300">
-          Interwał:
-          <select id='interval' value={interval} onChange={handleIntervalChange} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-            <option value='1m'>1 minuta</option>
-            <option value='2m'>2 minuty</option>
-            <option value='5m'>5 minut</option>
-            <option value='15m'>15 minut</option>
-            <option value='30m'>30 minut</option>
-            <option value='60m'>60 minut</option>
-            <option value='90m'>90 minut</option>
-            <option value='1h'>1 godzina</option>
-            <option value='1d'>1 dzień</option>
-            <option value='5d'>5 dni</option>
-            <option value="1wk">1 tydzień</option>
-            <option value='1mo'>1 miesiąc</option>
-            <option value='3mo'>3 miesiące</option>
-          </select>
-        </label>
-      {error && <p className="text-red-500">Błąd: {error}</p>}
+      {companyName != 'undefined' && <CompanyInfo ticker={stockData?.ticker} companyName={companyName}/>}
+      
+      <label htmlFor="period" className="block text-sm font-medium text-gray-300">
+        Okres:
+        <select 
+          id='period' 
+          value={period} 
+          onChange={handlePeriodChange} 
+          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+        >
+          <option value='1d'>1 dzień</option> 
+          <option value='5d'>5 dni</option>
+          <option value='1mo'>1 miesiąc</option>
+          <option value='3mo'>3 miesiące</option>
+          <option value='6mo'>6 miesięcy</option>
+          <option value='1y'>1 rok</option>
+          <option value='2y'>2 lata</option>
+          <option value='5y'>5 lat</option>
+          <option value='10y'>10 lat</option>
+          <option value='ytd'>Od początku roku</option>
+          <option value='max'>Cały dostępny okres</option>
+        </select>
+      </label>
 
-        {stockData ? (
-            stockData.stockData.length > 0 ? (
-            <div className='mt-5'>
-              <StockChart stockData={stockData.stockData} smaData={stockData.smaData} />
-              <Indicators ticker={stockData?.ticker}/>
+      <label htmlFor='interval' className="block text-sm font-medium text-gray-300">
+        Interwał:
+        <select 
+          id='interval' 
+          value={interval} 
+          onChange={handleIntervalChange} 
+          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+        >
+          <option value='1m'>1 minuta</option>
+          <option value='2m'>2 minuty</option>
+          <option value='5m'>5 minut</option>
+          <option value='15m'>15 minut</option>
+          <option value='30m'>30 minut</option>
+          <option value='60m'>60 minut</option>
+          <option value='90m'>90 minut</option>
+          <option value='1h'>1 godzina</option>
+          <option value='1d'>1 dzień</option>
+          <option value='5d'>5 dni</option>
+          <option value="1wk">1 tydzień</option>
+          <option value='1mo'>1 miesiąc</option>
+          <option value='3mo'>3 miesiące</option>
+        </select>
+      </label>
+
+      {stockData ? (
+        stockData.stockData.length > 0 ? (
+          <div className='mt-5'>
+            <StockChart stockData={stockData.stockData} smaData={stockData.smaData} />
+            
+            {/* Przycisk do pokazywania predykcji */}
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={() => setShowPrediction(!showPrediction)}
+                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white font-medium transition-colors"
+              >
+                {showPrediction ? 'Ukryj predykcję' : 'Pokaż predykcję cen na następne 30 dni'}
+              </button>
             </div>
-            ) : (
-            <div>Brak danych dla podanego okresu/interwału</div>
-            )
+
+            {/* Warunkowe renderowanie komponentu predykcji */}
+            {showPrediction && 
+            <div><StockPrediction ticker={stockData?.ticker} /></div>}
+            
+            <Indicators ticker={stockData?.ticker}/>
+          </div>
         ) : (
-            <div>Ładowanie danych...</div>
-        )}
+          <div>Brak danych dla podanego okresu/interwału</div>
+        )
+      ) : (
+        <div>Ładowanie danych...</div>
+      )}
 
       <p>Ticker: {stockData?.ticker}</p>  
     </div>
