@@ -85,3 +85,13 @@ export async function fetchStockPrediction(ticker) {
 }
 
 export { getCompanyDescription };
+
+export async function fetchNewsWithSentiment(ticker) {
+  const url = `${API_BASE_URL}/news?ticker=${encodeURIComponent(ticker)}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Nieznany błąd.');
+  }
+  return await response.json();
+}

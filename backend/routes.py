@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify
 from finance_charts_utils import get_stock_data_by_ticker, get_stock_data_by_company_name
 from finance_indicators import get_financial_indicators
 from finance_predictions import predict_stock_prices
+from finance_news import get_news_with_sentiment
+from deep_translator import GoogleTranslator
 
 routes = Blueprint('routes', __name__)
 
@@ -79,3 +81,39 @@ def predict_stock():
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': f'Wyjątek: {str(e)}'}), 500
+    
+@routes.route('/api/news', methods=['GET'])
+def fetch_news_endpoint():
+    ticker = request.args.get('ticker')
+    
+    if not ticker:
+        return jsonify({'error': 'Musisz podać ticker.'}), 400
+
+    try:
+        news_data = get_news_with_sentiment(ticker)
+        return jsonify(news_data)
+    except Exception as e:
+        return jsonify({'error': f'Wyjątek: {str(e)}'}), 500
+    
+@routes.route('/api/translate', methods=['POST'])
+def translate_text():
+    try:
+        data = request.json
+        text = data.get('text', '')
+        
+        if not text:
+            return jsonify({'error': 'Brak tekstu do tłumaczenia'}), 400
+
+        translator = GoogleTranslator(source='auto', target='pl')
+        translated = translator.translate(text)
+
+        return jsonify({
+            'status': 'success',
+            'translated_text': translated
+        })
+    except Exception as e:
+        print(f"Błąd tłumaczenia: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        }), 500

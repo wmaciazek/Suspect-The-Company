@@ -6,6 +6,8 @@ import dynamic from 'next/dynamic';
 import CompanyInfo from '@/components/CompanyInfo';
 import Indicators from '@/components/Indicators';
 import StockPrediction from '@/components/StockPrediction';
+import CompanyVisuals from '@/components/CompanyVisuals';
+import NewsWithSentiment from '@/components/NewsWithSentiment';
 
 const StockChart = dynamic(() => import('@/components/StockChart'), {
   ssr: false,
@@ -17,7 +19,7 @@ const CompanyDetails = () => {
   const ticker = searchParams.get('ticker');
   const [stockData, setStockData] = useState(null);
   const [error, setError] = useState(null);
-  const [period, setPeriod] = useState('5d'); 
+  const [period, setPeriod] = useState('1y'); 
   const [interval, setInterval] = useState('1d'); 
   const [showPrediction, setShowPrediction] = useState(false);
 
@@ -74,9 +76,21 @@ const CompanyDetails = () => {
 
   return (
     <div className="p-4 bg-gray-900 text-gray-100 min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Ticker: {stockData?.ticker}</h1>
+      {/* <h1 className="text-2xl font-bold mb-4">Ticker: {stockData?.ticker}</h1> */}
+      <div className="pb-3 bg-gray-900 text-gray-100 w-1/3">
+      {stockData && (
+        <CompanyVisuals 
+          ticker={stockData.ticker}
+          companyName={companyName !== 'undefined' ? companyName : stockData.ticker}
+        />
+      )}
+      </div>
       {companyName != 'undefined' && <CompanyInfo ticker={stockData?.ticker} companyName={companyName}/>}
-      
+      <div className='pt-3'>
+      {stockData && (
+        <NewsWithSentiment ticker={ticker} />
+      )}
+      </div>
       <label htmlFor="period" className="block text-sm font-medium text-gray-300">
         Okres:
         <select 
@@ -133,7 +147,7 @@ const CompanyDetails = () => {
             />
             
             {/* Przycisk do pokazywania predykcji */}
-            <div className="mt-4 flex justify-center">
+            <div className="mt-4 flex justify-center bg-gray-800 rounded-lg p-4">
               <button
                 onClick={() => setShowPrediction(!showPrediction)}
                 className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white font-medium transition-colors"

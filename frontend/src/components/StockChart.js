@@ -37,20 +37,20 @@ const StockChart = ({ stockData, period, interval }) => {
     }
 
     const columns = Object.keys(data[0]);
-    console.log('Dostępne kolumny:', columns);
+    const dateCol = columns.find(col => 
+      col === 'Date_' || 
+      col === 'Datetime_' || 
+      col.toLowerCase().includes('date') || 
+      col.toLowerCase().includes('time')
+    );
 
-    // Szukamy kolumny z datą
-    const dateCol = 'Date_';
-
-    // Szukamy kolumny z ceną zamknięcia dla konkretnego tickera
     let closeCol;
     if (ticker) {
       closeCol = `Close_${ticker.toUpperCase()}`;
     } else {
-      closeCol = columns.find(col => col.startsWith('Close_'));
+      closeCol = columns.find(col => col.startsWith('Close_')) || 'Close';
     }
 
-    console.log('Wybrane kolumny:', { dateCol, closeCol, ticker });
     return { dateCol, closeCol };
   };
 
@@ -67,15 +67,18 @@ const StockChart = ({ stockData, period, interval }) => {
       return [];
     }
 
-    console.log('Rozpoczęcie przetwarzania danych z kolumnami:', { dateCol, closeCol });
-
     const processedData = data
       .map((row, index) => {
+        if (!row || Object.keys(row).length === 0) {
+          console.error(`Pusty wiersz na indeksie ${index}`);
+          return null;
+        }
+
         const rawValue = row[closeCol];
         const rawDate = row[dateCol];
 
-        if (rawValue === undefined || rawValue === null || rawDate === undefined || rawDate === null) {
-          console.error(`Brak wartości w wierszu ${index}:`, row);
+        if (!rawValue || !rawDate) {
+          console.error(`Brak wymaganych wartości w wierszu ${index}:`, row);
           return null;
         }
 
@@ -83,15 +86,21 @@ const StockChart = ({ stockData, period, interval }) => {
           ? parseFloat(rawValue.replace(',', '.'))
           : parseFloat(rawValue);
 
-        // Konwersja daty
         let date;
         try {
-          date = new Date(rawDate).getTime();
+          if (typeof rawDate === 'string') {
+            date = new Date(rawDate).getTime();
+          } else if (typeof rawDate === 'number') {
+            date = rawDate;
+          } else {
+            throw new Error('Nieobsługiwany format daty');
+          }
+
           if (isNaN(date)) {
-            throw new Error('Invalid date');
+            throw new Error('Nieprawidłowa data');
           }
         } catch (err) {
-          console.error(`Błąd konwersji daty w wierszu ${index}:`, rawDate);
+          console.error(`Błąd konwersji daty w wierszu ${index}:`, { rawDate, error: err.message });
           return null;
         }
 
@@ -105,19 +114,14 @@ const StockChart = ({ stockData, period, interval }) => {
       .filter(item => item !== null)
       .sort((a, b) => a.date - b.date);
 
-    console.log(`Przetworzono ${processedData.length} wierszy danych`);
     return processedData;
   };
 
   useEffect(() => {
     try {
       if (!stockData || stockData.length === 0) {
-        console.log('Brak danych głównych');
         return;
       }
-
-      console.log('Przykładowy wiersz danych:', stockData[0]);
-      console.log('Rozpoczęcie przetwarzania danych...');
       
       const baseData = processData(stockData);
       if (baseData.length === 0) {
@@ -132,7 +136,6 @@ const StockChart = ({ stockData, period, interval }) => {
         }
       }
 
-      // Synchronizacja zakresu dat
       let startDate = baseData[0].date;
       let endDate = baseData[baseData.length - 1].date;
 
@@ -144,15 +147,26 @@ const StockChart = ({ stockData, period, interval }) => {
       const filteredBaseData = baseData.filter(d => d.date >= startDate && d.date <= endDate);
       const filteredCompareData = compareData?.filter(d => d.date >= startDate && d.date <= endDate);
 
-      const labels = filteredBaseData.map(row => 
-        new Date(row.date).toLocaleDateString('pl-PL', { 
-          year: 'numeric',
-          month: '2-digit',
+      const formatDate = (date) => {
+        const dateObj = new Date(date);
+        const isMinuteInterval = interval && interval.includes('min');
+        
+        if (isMinuteInterval) {
+          const hours = dateObj.getHours().toString().padStart(2, '0');
+          const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+          const day = dateObj.getDate().toString().padStart(2, '0');
+          const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+          return `${day}.${month} ${hours}:${minutes}`;
+        }
+        
+        return dateObj.toLocaleDateString('pl-PL', {
           day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        })
-      );
+          month: '2-digit',
+          year: 'numeric'
+        });
+      };
+
+      const labels = filteredBaseData.map(row => formatDate(row.date));
 
       const datasets = [
         {
@@ -180,10 +194,10 @@ const StockChart = ({ stockData, period, interval }) => {
       setError(null);
     } catch (err) {
       console.error('Błąd podczas przetwarzania danych:', err);
-      setError(err.message);
+      setError(`Błąd przetwarzania danych: ${err.message}`);
       setChartDataState(null);
     }
-  }, [stockData, comparisonData, compareTickerInput]);
+  }, [stockData, comparisonData, compareTickerInput, period, interval]);
 
   const handleCompareStock = async () => {
     if (!compareTickerInput) return;
@@ -191,14 +205,11 @@ const StockChart = ({ stockData, period, interval }) => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Pobieranie danych porównawczych:', { ticker: compareTickerInput, period, interval });
       
       const response = await fetchStockDataInComponent(compareTickerInput, period, interval);
-      console.log('Odpowiedź API dla porównania:', response);
 
       if (response && response.stockData && response.stockData.length > 0) {
         setComparisonData(response.stockData);
-        console.log('Ustawiono dane porównawcze:', response.stockData);
       } else {
         throw new Error('Otrzymano nieprawidłowe dane z API');
       }
@@ -214,7 +225,6 @@ const StockChart = ({ stockData, period, interval }) => {
   const handleRemoveComparison = () => {
     setComparisonData(null);
     setCompareTickerInput('');
-    console.log('Usunięto dane porównawcze');
   };
 
   const chartOptions = {
@@ -250,11 +260,35 @@ const StockChart = ({ stockData, period, interval }) => {
       x: {
         grid: {
           color: 'rgba(255, 255, 255, 0.1)',
+          drawOnChartArea: true,
         },
         ticks: {
           color: 'white',
           maxRotation: 45,
-          minRotation: 45
+          minRotation: 45,
+          autoSkip: true,
+          maxTicksLimit: 12,
+          callback: function(val, index) {
+            const label = this.getLabelForValue(val);
+            const totalPoints = this.chart.data.labels.length;
+            
+            // Zawsze pokaż pierwszą i ostatnią etykietę
+            if (index === 0 || index === totalPoints - 1) return label;
+            
+            // Dla interwałów minutowych
+            if (interval && interval.includes('min')) {
+              const skipFactor = Math.ceil(totalPoints / 10);
+              return index % skipFactor === 0 ? label : '';
+            }
+            
+            // Dla innych interwałów
+            return index % 2 === 0 ? label : '';
+          },
+          font: {
+            size: 9,
+            weight: 'bold'
+          },
+          padding: 8
         }
       },
       y: {
@@ -272,7 +306,7 @@ const StockChart = ({ stockData, period, interval }) => {
   };
 
   if (!stockData || stockData.length === 0) {
-    return <div className="text-white">brak danych</div>;
+    return <div className="text-white">Brak danych do wyświetlenia</div>;
   }
 
   return (
@@ -318,12 +352,13 @@ const StockChart = ({ stockData, period, interval }) => {
         {chartDataState && <Line data={chartDataState} options={chartOptions} />}
       </div>
 
-      {/* Debug info */}
       <div className="mt-4 text-xs text-gray-400">
         {stockData && stockData.length > 0 && (
           <>
             <div>Kolumny: {Object.keys(stockData[0]).join(', ')}</div>
-            <div>Przykładowe dane: {JSON.stringify(stockData[0])}</div>
+            <div>Interwał: {interval}</div>
+            <div>Okres: {period}</div>
+            <div>Liczba punktów danych: {stockData.length}</div>
           </>
         )}
       </div>
