@@ -1,189 +1,272 @@
-import requests
-from bs4 import BeautifulSoup
+from typing import Optional, Dict, Any
 import yfinance as yf
-import re
+import google.generativeai as genai
+import os
+import requests
 import pandas as pd
-import time
+import json
+import re
+from datetime import datetime, timedelta
 
-#CZY TICKER JEST TICKEREM
-def is_valid_ticker(ticker):
-    return bool(re.match(r'^[A-Z0-9\.\-]+(?:\.[A-Z]{2,})?$', ticker))
+class StockDataFetcher:
+    def __init__(self):
+        self.cache = {}
+        # Ustawienia API
+        api_key = os.getenv('GOOGLE_API_KEY')
+        if api_key:
+            try:
+                genai.configure(api_key=api_key)
+                self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+                print("Model AI skonfigurowany pomyślnie")
+            except Exception as e:
+                print(f"Błąd konfiguracji modelu AI: {e}")
+                self.model = None
+        else:
+            print("Ostrzeżenie: Brak GOOGLE_API_KEY")
+            self.model = None
 
-#CZY TICKER == DANA FIRMA
-def verify_ticker(ticker, company_name):
-    try:
-        ticker_info = yf.Ticker(ticker)
-        short_name = ticker_info.info.get('shortName', '').lower()
-        long_name = ticker_info.info.get('longName', '').lower()
-        
-        if company_name.lower() in short_name or company_name.lower() in long_name:
-            return True
-        return False
-    except Exception as e:
-        print(f"blad weryfikacji tickera {ticker}: {e}")
-        return False
-
-#PRIORYTETYZACJA TICKERA DLA GPW/ SCRAPOWANIE STRONY GPW
-def get_ticker_from_gpw(company_name):
-    url = f'https://www.gpw.pl/spolka?isin={company_name}'
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
-
-        ticker_element = soup.find("div", {"class": "isin"})
-        if ticker_element:
-            ticker = ticker_element.text.strip()
-            if is_valid_ticker(ticker):
-                print(f"znaleziono ticker na GPW: {ticker}")
-                return ticker
-        print("brak tickera na gpw.")
-        return None
-
-    #LEKKIE SZAMBO Z ERRORAMI
-    except requests.exceptions.RequestException as e:
-        print(f"blad scrapowania GPW: {e}")
-        return None
-    except Exception as e:
-        print(f"blad scrapowania GPW: {e}")
-        return None
-
-#SCRAPOWANIE YAHOO FINANCE aby dostać Ticker z nazwy Firmy
-def get_ticker_from_yahoo(company_name):
-    url = f'https://finance.yahoo.com/lookup?s={company_name}'
-    try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+        # Mapowanie znanych firm do tickerów
+        self.company_tickers = {
+            'apple': 'AAPL',
+            'microsoft': 'MSFT',
+            'amazon': 'AMZN',
+            'google': 'GOOGL',
+            'alphabet': 'GOOGL',
+            'meta': 'META',
+            'facebook': 'META',
+            'tesla': 'TSLA',
+            'nvidia': 'NVDA',
+            'netflix': 'NFLX',
+            'adobe': 'ADBE',
+            'intel': 'INTC',
+            'amd': 'AMD',
+            'coca cola': 'KO',
+            'coca-cola': 'KO',
+            'pepsi': 'PEP',
+            'pepsico': 'PEP',
+            'disney': 'DIS',
+            'walmart': 'WMT',
+            'nike': 'NKE',
+            'mcdonalds': 'MCD',
+            "mcdonald's": 'MCD',
+            'boeing': 'BA',
+            'visa': 'V',
+            'mastercard': 'MA',
+            'paypal': 'PYPL',
+            'ibm': 'IBM',
+            'oracle': 'ORCL',
+            'cisco': 'CSCO',
+            'salesforce': 'CRM',
+            'twitter': 'X',
+            'x': 'X',
+            'spotify': 'SPOT',
+            'uber': 'UBER',
+            'lyft': 'LYFT',
+            'airbnb': 'ABNB',
+            'zoom': 'ZM',
+            'robinhood': 'HOOD',
+            'coinbase': 'COIN',
+            # Polskie spółki
+            'cd projekt': 'CDR.WA',
+            'cdprojekt': 'CDR.WA',
+            'pkn orlen': 'PKN.WA',
+            'orlen': 'PKN.WA',
+            'pko bp': 'PKO.WA',
+            'pekao': 'PEO.WA',
+            'kghm': 'KGH.WA',
+            'pzu': 'PZU.WA',
+            'allegro': 'ALE.WA',
         }
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
 
-        results = soup.find_all('tr')
-        if not results:
-            print("Brak wyników na Yahoo Finance.")
+    def get_ticker_from_ai(self, company_name: str) -> Optional[str]:
+        """
+        Używa Google Gemini do znalezienia tickera na podstawie nazwy firmy
+        """
+        if not self.model:
+            print("Błąd: Brak skonfigurowanego modelu AI")
             return None
 
-        for result in results:
-            cells = result.find_all('td')
-            if cells and len(cells) > 1:
-                ticker_cell = cells[0]
-                name_cell = cells[1]
+        if company_name in self.cache:
+            return self.cache[company_name]
 
-                ticker = ticker_cell.text.strip()
-                name = name_cell.text.strip()
-
-                if verify_ticker(ticker, company_name):
-                    print(f"Znaleziono ticker: {ticker} dla firmy: {name}")
-                    return ticker
-
-        print("Nie odnaleziono tickera.")
-        return None
-
-    except requests.exceptions.RequestException as e:
-        print(f"Błąd scrapowania Yahoo Finance: {e}")
-        return None
-    except Exception as e:
-        print(f"Błąd scrapowania Yahoo Finance: {e}")
-        return None
-
-#Wymiana walut aby było USD wyjściowo
-def get_exchange_rate(base_currency, target_currency='USD'):
-    try:
-        url = f'https://api.exchangerate-api.com/v4/latest/{base_currency}'
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
-
-        if 'rates' in data and target_currency in data['rates']:
-            return data['rates'][target_currency]
-
-    #NIE WYRZUCA ERRORA A POWINNO
-    except requests.exceptions.RequestException as e:
-        print(f"blad api: {e}")
-        return None
-    except (KeyError, ValueError) as e:
-        print(f"blad api: {e}")
-        return None
-
-def get_stock_data_from_yfinance(ticker, period='1mo', interval='1d', retries=3):
-    #pobieranie danych z yfinance
-    for attempt in range(retries):
         try:
-            print(f"pobieram dane dla: {ticker}, period={period}, interval={interval}")
+            prompt = f"""
+            Znajdź ticker giełdowy dla firmy "{company_name}".
+            Odpowiedz dokładnie w tym formacie JSON bez żadnych dodatkowych znaków:
+            {{"ticker": "SYMBOL", "exchange": "GIEŁDA", "confidence": 0-100}}
+            """
+
+            response = self.model.generate_content(prompt)
+            result = response.text.strip()
+            
+            # Usuń backticki i "json" jeśli występują
+            result = result.replace('```json', '').replace('```', '').strip()
+            
+            try:
+                data = json.loads(result)
+                
+                if data['confidence'] >= 50:
+                    if self.verify_ticker(data['ticker'], company_name):
+                        self.cache[company_name] = data['ticker']
+                        return data['ticker']
+                        
+            except json.JSONDecodeError as e:
+                print(f"Błąd parsowania JSON dla odpowiedzi AI: {result}")
+                print(f"Szczegóły błędu: {e}")
+            
+            return None
+
+        except Exception as e:
+            print(f"Błąd AI podczas szukania tickera: {e}")
+            return None
+
+    def verify_ticker(self, ticker: str, company_name: str) -> bool:
+        """
+        Weryfikuje czy ticker odpowiada nazwie firmy
+        """
+        try:
+            ticker_info = yf.Ticker(ticker)
+            company_info = ticker_info.info
+            
+            fields_to_check = [
+                'shortName',
+                'longName',
+                'description',
+                'sector',
+                'industry'
+            ]
+
+            company_name_lower = company_name.lower()
+            for field in fields_to_check:
+                if field in company_info:
+                    field_value = str(company_info[field]).lower()
+                    if company_name_lower in field_value:
+                        return True
+
+            return False
+
+        except Exception as e:
+            print(f"Błąd weryfikacji tickera {ticker}: {e}")
+            return False
+
+    def get_stock_data(self, query: str, period: str = '1mo', interval: str = '1d') -> Optional[Dict[str, Any]]:
+        """
+        Pobiera dane giełdowe na podstawie tickera lub nazwy firmy
+        """
+        try:
+            # Jeśli query wygląda jak ticker, użyj go bezpośrednio bez AI
+            if re.match(r'^[A-Z0-9\.]{1,5}$', query):
+                ticker = query
+                return self.fetch_stock_data(ticker, period, interval, query)
+                
+            # Jeśli to nie ticker, spróbuj znaleźć w lokalnym mapowaniu
+            ticker = self.company_tickers.get(query.lower())
+            
+            # Jeśli nie znaleziono w mapowaniu, dopiero wtedy użyj AI
+            if not ticker:
+                ticker = self.get_ticker_from_ai(query)
+
+            if not ticker:
+                print(f"Nie znaleziono tickera dla: {query}")
+                return None
+
+            print(f"Pobieranie danych dla tickera: {ticker}")
+            return self.fetch_stock_data(ticker, period, interval, query)
+
+        except Exception as e:
+            print(f"Błąd pobierania danych: {e}")
+            return None
+
+    def fetch_stock_data(self, ticker: str, period: str, interval: str, original_query: str) -> Optional[Dict[str, Any]]:
+        """
+        Pobiera dane giełdowe z yfinance
+        """
+        try:
+            # Pobieranie danych
             data = yf.download(ticker, period=period, interval=interval)
-
+            
             if data.empty:
-                raise ValueError(f"yfinance nie zwrócił danych dla tickera '{ticker}'.")
+                print(f"Brak danych dla tickera: {ticker}")
+                return None
 
+            # Przygotowanie danych
             data = data.reset_index()
             if isinstance(data.columns, pd.MultiIndex):
                 data.columns = ['_'.join(col).strip() for col in data.columns.values]
+            else:
+                data.columns = [col.lower() for col in data.columns]
 
+            # Pobieranie informacji o walucie
+            ticker_info = yf.Ticker(ticker)
+            currency = ticker_info.info.get('currency', 'USD')
+            
+            # Konwersja do USD jeśli potrzebne
+            if currency != 'USD':
+                exchange_rate = self.get_exchange_rate(currency)
+                if exchange_rate:
+                    price_columns = ['open', 'high', 'low', 'close', 'adj close']
+                    for col in price_columns:
+                        if col in data.columns:
+                            data[col] *= exchange_rate
+
+            # Znajdź kolumnę z ceną zamknięcia
             close_col = next((col for col in data.columns if 'close' in col.lower()), None)
             if not close_col:
-                raise KeyError("brak 'close'.")
+                print(f"Nie znaleziono kolumny 'close' dla {ticker}")
+                return None
 
-            ticker_info = yf.Ticker(ticker)
-            try:
-                currency = ticker_info.info['currency']
-            except (KeyError, TypeError) as e:
-                print(f"blad waluty, {e}")
-                currency = 'USD'
-            print(f"Waluta dla {ticker}: {currency}")
+            # Obliczanie SMA
+            sma_50 = data[close_col].rolling(window=50).mean()
+            
+            # Pobierz więcej informacji o firmie
+            info = ticker_info.info
+            company_info = {
+                'name': info.get('longName', original_query),
+                'sector': info.get('sector', 'Brak danych'),
+                'industry': info.get('industry', 'Brak danych'),
+                'website': info.get('website', 'Brak danych'),
+                'description': info.get('longBusinessSummary', 'Brak opisu'),
+                'market_cap': info.get('marketCap', 0),
+                'employees': info.get('fullTimeEmployees', 0),
+            }
+            
+            return {
+                'ticker': ticker,
+                'companyName': original_query,
+                'companyInfo': company_info,
+                'stockData': data.to_dict(orient='records'),
+                'smaData': sma_50.dropna().reset_index().to_dict(orient='records'),
+                'currency': 'USD'
+            }
 
-            exchange_rate = get_exchange_rate(currency.upper(), 'USD')
-            print(f"Kurs wymiany: {exchange_rate}")
-
-            if exchange_rate is not None:
-                for col in data.columns:
-                    if 'open' in col.lower() or 'high' in col.lower() or 'low' in col.lower() or 'close' in col.lower():
-                        data[col] = data[col] * exchange_rate
-            else:
-                raise ValueError(f"Nie udało się pobrać kursu wymiany dla {currency} -> USD")
-
-            data_json = data.to_dict(orient='records')
-            sma_json = data[close_col].rolling(window=50).mean().dropna().reset_index().to_dict(orient='records')
-
-            return {'ticker': ticker, 'stockData': data_json, 'smaData': sma_json, 'currency': 'USD'}
-
-        except (ValueError, KeyError) as e:
-            print(f"Błąd yfinance ({ticker}): {e}")
-            raise
         except Exception as e:
-            print(f"Nieoczekiwany błąd yfinance ({ticker}): {e}")
-            if attempt < retries - 1:
-                print("Ponawiam próbę...")
-                time.sleep(5 ** attempt)
-                continue
-            raise
+            print(f"Błąd pobierania danych z yfinance dla {ticker}: {e}")
+            return None
 
-#informacje giełdowe po tickerze
-def get_stock_data_by_ticker(ticker, period='1mo', interval='1d'):
-    try:
-        data = get_stock_data_from_yfinance(ticker, period, interval)
-        if data:
-            data['companyName'] = ticker
-        return data
-    except Exception as e:
-        print(f"Błąd pobierania danych dla '{ticker}': {e}")
-        return None
+    def get_exchange_rate(self, from_currency: str, to_currency: str = 'USD') -> Optional[float]:
+        """
+        Pobiera kurs wymiany walut
+        """
+        try:
+            url = f'https://api.exchangerate-api.com/v4/latest/{from_currency}'
+            response = requests.get(url)
+            data = response.json()
+            return data['rates'].get(to_currency)
+        except Exception as e:
+            print(f"Błąd pobierania kursu wymiany {from_currency} -> {to_currency}: {e}")
+            return None
 
-#informacje giełdowe po nazwie firmy
-def get_stock_data_by_company_name(company_name, period='1mo', interval='1d'):
-    ticker = get_ticker_from_gpw(company_name)
-    if not ticker:
-        ticker = get_ticker_from_yahoo(company_name)
-    print(f"Ticker: {ticker}")
+def get_stock_data_by_ticker(ticker: str, period: str = '1mo', interval: str = '1d') -> Optional[Dict[str, Any]]:
+    """
+    Pobiera dane giełdowe bezpośrednio po tickerze (bez użycia AI)
+    """
+    fetcher = StockDataFetcher()
+    # Bezpośrednie użycie fetch_stock_data z pominięciem szukania tickera
+    return fetcher.fetch_stock_data(ticker, period, interval, ticker)
 
-    if not ticker:
-        return None
-
-    try:
-        data = get_stock_data_from_yfinance(ticker, period, interval)
-        if data:
-            data['companyName'] = company_name
-        return data
-    except Exception as e:
-        print(f"Błąd pobierania danych dla '{ticker}': {e}")
-        return None
+def get_stock_data_by_company_name(company_name: str, period: str = '1mo', interval: str = '1d') -> Optional[Dict[str, Any]]:
+    """
+    Pobiera dane giełdowe po nazwie firmy (z użyciem AI jeśli potrzebne)
+    """
+    fetcher = StockDataFetcher()
+    return fetcher.get_stock_data(company_name, period, interval)

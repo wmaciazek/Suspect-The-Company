@@ -9,6 +9,9 @@ routes = Blueprint('routes', __name__)
 
 @routes.route('/api/stock_data_by_ticker', methods=['GET'])
 def stock_data_by_ticker_endpoint():
+    """
+    Endpoint do pobierania danych po tickerze
+    """
     ticker = request.args.get('ticker')
     period = request.args.get('period', '1mo')
     interval = request.args.get('interval', '1d')
@@ -18,18 +21,18 @@ def stock_data_by_ticker_endpoint():
 
     try:
         data = get_stock_data_by_ticker(ticker, period, interval)
-        if hasattr(data, "empty"):
-            if not data.empty:
-                return jsonify(data)
-        elif isinstance(data, (list, dict)):
-            if data:
-                return jsonify(data)
-        return jsonify({'error': f'Błąd pobierania danych dla tickera "{ticker}".'}), 500
+        if data:
+            return jsonify(data)
+        return jsonify({'error': f'Brak danych dla tickera "{ticker}".'}), 404
     except Exception as e:
-        return jsonify({'error': f'Wyjątek: {str(e)}'}), 500
+        print(f"Błąd podczas pobierania danych dla {ticker}: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @routes.route('/api/stock_data_by_company_name', methods=['GET'])
 def stock_data_by_company_name_endpoint():
+    """
+    Endpoint do pobierania danych po nazwie firmy
+    """
     company_name = request.args.get('name')
     period = request.args.get('period', '1mo')
     interval = request.args.get('interval', '1d')
@@ -39,15 +42,12 @@ def stock_data_by_company_name_endpoint():
 
     try:
         data = get_stock_data_by_company_name(company_name, period, interval)
-        if hasattr(data, "empty"):
-            if not data.empty:
-                return jsonify(data)
-        elif isinstance(data, (list, dict)):
-            if data:
-                return jsonify(data)
-        return jsonify({'error': f'Błąd pobierania danych dla firmy "{company_name}".'}), 500
+        if data:
+            return jsonify(data)
+        return jsonify({'error': f'Nie znaleziono danych dla firmy "{company_name}".'}), 404
     except Exception as e:
-        return jsonify({'error': f'Wyjątek: {str(e)}'}), 500
+        print(f"Błąd podczas pobierania danych dla {company_name}: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @routes.route('/api/indicators', methods=['GET'])
 def fetch_indicators_endpoint():
@@ -117,3 +117,4 @@ def translate_text():
             'status': 'error',
             'error': str(e)
         }), 500
+
