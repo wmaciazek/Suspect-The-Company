@@ -11,7 +11,7 @@ const LandingPage = () => {
       <div className="flex justify-center">
         <Image src="/Money.svg" alt="Money" width={450} height={450} className="" />
       </div>
-      <p className="text-lg mb-8 bg-green-600 px-4 py-2 rounded"><Link target='_blank' href='https://github.com/swapperDEV/Suspect-The-Company'>Projekt tylko i wyłącznie do celów naukowych w oparciu o biblioteke yfinance</Link></p>
+      <p className="text-lg mb-8 bg-green-600 px-4 py-2 rounded"><Link target='_blank' href='https://github.com/swapperDEV/Suspect-The-Company'>Projekt tylko i wyłącznie do celów naukowych w oparciu o biblioteke yfinance i api finnhub</Link></p>
       <div className="flex space-x-4">
         <Link href="/" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
           Szukaj Firmy

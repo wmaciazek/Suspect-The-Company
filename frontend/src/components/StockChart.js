@@ -23,7 +23,7 @@ ChartJS.register(
   Legend
 );
 
-const StockChart = ({ stockData, period, interval }) => {
+const StockChart = ({ stockData, period, interval, realTimePrice }) => {
   const [compareTickerInput, setCompareTickerInput] = useState('');
   const [comparisonData, setComparisonData] = useState(null);
   const [error, setError] = useState(null);

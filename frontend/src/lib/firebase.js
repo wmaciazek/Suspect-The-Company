@@ -61,5 +61,126 @@ async function getSearchHistory(userId) {
   }
 }
 
+async function addToPortfolio(userId, stockData) {
+  if (!db || !userId) {
+    console.error("Firestore lub userId nie są zdefiniowane.");
+    return;
+  }
+  try {
+    const portfolioRef = collection(db, 'users', userId, 'portfolio');
+    const q = query(portfolioRef, where('symbol', '==', stockData.symbol));
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      // Aktualizuj istniejącą pozycję
+      const docRef = doc(portfolioRef, querySnapshot.docs[0].id);
+      await setDoc(docRef, {
+        ...stockData,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+    } else {
+      // Dodaj nową pozycję
+      await addDoc(portfolioRef, {
+        ...stockData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
+    console.log("Zaktualizowano portfolio:", stockData.symbol);
+  } catch (error) {
+    console.error("Błąd aktualizacji portfolio:", error);
+    throw error;
+  }
+}
 
-export { auth, db, addSearchToHistory, getSearchHistory }; 
+async function getPortfolio(userId) {
+  if (!db || !userId) {
+    return [];
+  }
+  try {
+    const portfolioRef = collection(db, 'users', userId, 'portfolio');
+    const q = query(portfolioRef, orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    const portfolio = [];
+    querySnapshot.forEach((doc) => {
+      portfolio.push({ id: doc.id, ...doc.data() });
+    });
+    console.log("Pobrano portfolio:", portfolio);
+    return portfolio;
+  } catch (error) {
+    console.error("Błąd pobierania portfolio:", error);
+    throw error;
+  }
+}
+
+async function removeFromPortfolio(userId, stockId) {
+  if (!db || !userId) {
+    console.error("Firestore lub userId nie są zdefiniowane.");
+    return;
+  }
+  try {
+    const docRef = doc(db, 'users', userId, 'portfolio', stockId);
+    await deleteDoc(docRef);
+    console.log("Usunięto z portfolio:", stockId);
+  } catch (error) {
+    console.error("Błąd usuwania z portfolio:", error);
+    throw error;
+  }
+}
+
+
+async function addStockComment(userId, ticker, commentData) {
+  if (!db || !userId) {
+    console.error("Firestore lub userId nie są zdefiniowane.");
+    return;
+  }
+  try {
+    const commentsRef = collection(db, 'stockComments');
+    await addDoc(commentsRef, {
+      ...commentData,
+      userId,
+      ticker,
+      timestamp: serverTimestamp(),
+      likes: []
+    });
+    console.log("Dodano komentarz do:", ticker);
+  } catch (error) {
+    console.error("Błąd dodawania komentarza:", error);
+    throw error;
+  }
+}
+
+async function getStockComments(ticker) {
+  if (!db || !ticker) {
+    return [];
+  }
+  try {
+    const commentsRef = collection(db, 'stockComments');
+    const q = query(
+      commentsRef, 
+      where('ticker', '==', ticker),
+      orderBy('timestamp', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    const comments = [];
+    querySnapshot.forEach((doc) => {
+      comments.push({ id: doc.id, ...doc.data() });
+    });
+    console.log("Pobrano komentarze dla:", ticker);
+    return comments;
+  } catch (error) {
+    console.error("Błąd pobierania komentarzy:", error);
+    throw error;
+  }
+}
+export { 
+  auth, 
+  db, 
+  addSearchToHistory, 
+  getSearchHistory,
+  addToPortfolio,
+  getPortfolio,
+  removeFromPortfolio,
+  addStockComment,
+  getStockComments,
+};

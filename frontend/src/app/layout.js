@@ -5,6 +5,8 @@ import UserInfo from '@/components/UserInfo';
 import Link from 'next/link';
 import LoggedProvider from '@/providers/LoggedProvider';
 import { FaChartBar } from 'react-icons/fa';
+import { Toaster } from 'react-hot-toast';
+import { AlertProvider } from './contexts/AlertContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,31 +20,43 @@ export default function RootLayout({ children }) {
     <html lang="pl" className="dark">
       <body className={`${inter.className} bg-gray-900 text-gray-100`}>
         <AuthProvider>
-          <nav className="bg-gray-800 p-4">
-            <div className="container mx-auto flex items-center justify-between">
-              <Link href="/landing" className="text-xl font-bold">
+          <LoggedProvider>
+            <Toaster position="top-right" />
+            <nav className="bg-gray-800 p-4">
+              <div className="container mx-auto flex items-center justify-between">
+                <Link href="/landing" className="text-xl font-bold">
                   Analiza Akcji <FaChartBar className='inline-block bg-blue-500 rounded ml-1 text-white'/>
-              </Link>
-              <ul className="flex space-x-4">
-                <li>
-                  <Link href="/" className="hover:text-blue-500">
-                      Strona Główna
-                  </Link>
-                </li>
-              </ul>
-              <LoggedProvider>
-              <ul className="flex space-x-4">
-                <li>
-                  <Link href="/history" className="hover:text-blue-500">
+                </Link>
+                <ul className="flex space-x-4">
+                  <li>
+                    <Link href="/" className="hover:text-blue-500">
+                      Szukaj
+                    </Link>
+                  </li>
+                </ul>
+                <ul className="flex space-x-4">
+                  <li>
+                    <Link href="/history" className="hover:text-blue-500">
                       Historia Wyszukiwań
-                  </Link>
-                </li>
-              </ul>
-              </LoggedProvider>
-              <UserInfo /> 
+                    </Link>
+                  </li>
+                </ul>
+                <ul className="flex space-x-4">
+                  <li>
+                    <Link href="/portfolio" className="hover:text-blue-500">
+                      Portfolio
+                    </Link>
+                  </li>
+                </ul>
+                <UserInfo />
+              </div>
+            </nav>
+            <div className='container mx-auto'>
+              <AlertProvider>
+                {children}
+              </AlertProvider>
             </div>
-          </nav>
-          <div className='container mx-auto'>{children}</div>
+          </LoggedProvider>
         </AuthProvider>
       </body>
     </html>

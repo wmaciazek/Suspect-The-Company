@@ -95,3 +95,13 @@ export async function fetchNewsWithSentiment(ticker) {
   }
   return await response.json();
 }
+
+export async function fetchInvestmentAdvice(ticker) {
+  const url = `${API_BASE_URL}/investbot?ticker=${encodeURIComponent(ticker)}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Nieznany błąd.');
+  }
+  return await response.json();
+}

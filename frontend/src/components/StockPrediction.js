@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { fetchStockPrediction } from '@/lib/api';
 import { Line } from 'react-chartjs-2';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -86,53 +86,57 @@ const StockPrediction = ({ ticker }) => {
   const exportToPDF = () => {
     if (!predictionData) return;
 
-    const pdf = new jsPDF();
-    
-    // Dodaj tytuł
-    pdf.setFontSize(16);
-    pdf.text(`Predykcja cen dla ${ticker}`, 20, 20);
-    
-    // Dodaj informacje o dacie generowania
-    pdf.setFontSize(10);
-    pdf.text(`Wygenerowano: ${new Date().toLocaleString()}`, 20, 30);
-    
-    // Dodaj dane historyczne
-    pdf.autoTable({
-      head: [['Data', 'Cena historyczna']],
-      body: filteredHistoricalData.map(d => [
-        d.date,
-        d.value.toFixed(2)
-      ]),
-      startY: 40,
-      headStyles: { fillColor: [66, 66, 66] },
-      margin: { top: 40 },
-    });
-    
-    // Dodaj dane predykcyjne na nowej stronie
-    pdf.addPage();
-    pdf.autoTable({
-      head: [['Data', 'Predykcja', 'Górny przedział', 'Dolny przedział']],
-      body: predictionData.predictionData.map(d => [
-        d.date,
-        d.value.toFixed(2),
-        d.upper_bound.toFixed(2),
-        d.lower_bound.toFixed(2)
-      ]),
-      headStyles: { fillColor: [66, 66, 66] },
-    });
-
-    // Zapisz wykres jako obrazek i dodaj go do PDF
-    const chartCanvas = document.querySelector('canvas');
-    if (chartCanvas) {
-      const chartImage = chartCanvas.toDataURL('image/jpeg', 1.0);
+    try {
+      const pdf = new jsPDF();
+      
+      // Dodaj tytuł
+      pdf.setFontSize(16);
+      pdf.text(`Predykcja cen dla ${ticker}`, 20, 20);
+      
+      // Dodaj informacje o dacie generowania
+      pdf.setFontSize(10);
+      pdf.text(`Wygenerowano: ${new Date().toLocaleString()}`, 20, 30);
+      
+      // Użyj autoTable bezpośrednio
+      pdf.autoTable({
+        head: [['Data', 'Cena historyczna']],
+        body: filteredHistoricalData.map(d => [
+          d.date,
+          d.value.toFixed(2)
+        ]),
+        startY: 40,
+        headStyles: { fillColor: [66, 66, 66] },
+        margin: { top: 40 },
+      });
+      
+      // Dodaj dane predykcyjne na nowej stronie
       pdf.addPage();
-      pdf.text('Wykres predykcji', 20, 20);
-      pdf.addImage(chartImage, 'JPEG', 20, 30, 170, 100);
-    }
+      pdf.autoTable({
+        head: [['Data', 'Predykcja', 'Górny przedział', 'Dolny przedział']],
+        body: predictionData.predictionData.map(d => [
+          d.date,
+          d.value.toFixed(2),
+          d.upper_bound.toFixed(2),
+          d.lower_bound.toFixed(2)
+        ]),
+        headStyles: { fillColor: [66, 66, 66] },
+      });
 
-    // Zapisz plik
-    const fileName = `${ticker}_prediction_${new Date().toISOString().split('T')[0]}.pdf`;
-    pdf.save(fileName);
+      // Zapisz wykres jako obrazek i dodaj go do PDF
+      const chartCanvas = document.querySelector('canvas');
+      if (chartCanvas) {
+        const chartImage = chartCanvas.toDataURL('image/jpeg', 1.0);
+        pdf.addPage();
+        pdf.text('Wykres predykcji', 20, 20);
+        pdf.addImage(chartImage, 'JPEG', 20, 30, 170, 100);
+      }
+
+      // Zapisz plik
+      const fileName = `${ticker}_prediction_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+    } catch (error) {
+      console.error('Błąd podczas generowania PDF:', error);
+    }
   };
 
   if (loading) {

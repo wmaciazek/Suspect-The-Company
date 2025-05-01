@@ -3,6 +3,7 @@ from finance_charts_utils import get_stock_data_by_ticker, get_stock_data_by_com
 from finance_indicators import get_financial_indicators
 from finance_predictions import predict_stock_prices
 from finance_news import get_news_with_sentiment
+from finance_investbot import get_investment_advice
 from deep_translator import GoogleTranslator
 
 routes = Blueprint('routes', __name__)
@@ -118,3 +119,17 @@ def translate_text():
             'error': str(e)
         }), 500
 
+# Dodaj tę nową trasę do routes.py
+@routes.route('/api/investbot', methods=['GET'])
+def investbot_endpoint():
+    ticker = request.args.get('ticker')
+    if not ticker:
+        return jsonify({'error': 'Musisz podać ticker.'}), 400
+
+    try:
+        advice = get_investment_advice(ticker)
+        if isinstance(advice, dict) and 'error' in advice:
+            return jsonify({'error': advice['error']}), 500
+        return jsonify(advice)
+    except Exception as e:
+        return jsonify({'error': f'Wyjątek: {str(e)}'}), 500
