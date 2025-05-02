@@ -1,2 +1,2 @@
-# LOGOWANIE 
-# PREDYKCJA NAPRAWA NA PRZYSZLOSC
+# logowanie visibility
+# sarimax dokladniej

@@ -20,7 +20,6 @@ export default function RootLayout({ children }) {
     <html lang="pl" className="dark">
       <body className={`${inter.className} bg-gray-900 text-gray-100`}>
         <AuthProvider>
-          <LoggedProvider>
             <Toaster position="top-right" />
             <nav className="bg-gray-800 p-4">
               <div className="container mx-auto flex items-center justify-between">
@@ -34,6 +33,7 @@ export default function RootLayout({ children }) {
                     </Link>
                   </li>
                 </ul>
+                <LoggedProvider>
                 <ul className="flex space-x-4">
                   <li>
                     <Link href="/history" className="hover:text-blue-500">
@@ -48,6 +48,7 @@ export default function RootLayout({ children }) {
                     </Link>
                   </li>
                 </ul>
+                </LoggedProvider>
                 <UserInfo />
               </div>
             </nav>
@@ -56,7 +57,6 @@ export default function RootLayout({ children }) {
                 {children}
               </AlertProvider>
             </div>
-          </LoggedProvider>
         </AuthProvider>
       </body>
     </html>

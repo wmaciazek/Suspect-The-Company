@@ -11,14 +11,10 @@ import time
 class SentimentAnalyzer:
     @staticmethod
     def get_random_confidence() -> float:
-        """Generuje losową wartość pewności z przedziału 0.3-0.9"""
         return random.uniform(0.3, 0.9)
 
     @staticmethod
     def analyze(text: str) -> Dict[str, float]:
-        """
-        Analizuje sentyment tekstu z elementem losowości dla większego realizmu
-        """
         try:
             if not text or not isinstance(text, str):
                 return {
@@ -28,12 +24,10 @@ class SentimentAnalyzer:
                 
             analysis = TextBlob(str(text))
             
-            # Dodajemy losowość do wyniku, ale zachowujemy ogólny kierunek
             base_sentiment = analysis.sentiment.polarity
             random_factor = random.uniform(-0.2, 0.2)
             final_sentiment = max(min(base_sentiment + random_factor, 1.0), -1.0)
             
-            # Losowa pewność, ale wyższa dla wyraźnych sentymentów
             base_confidence = 1 - analysis.sentiment.subjectivity
             confidence_boost = abs(final_sentiment) * 0.3
             final_confidence = min(base_confidence + confidence_boost + random.uniform(-0.1, 0.1), 1.0)
@@ -59,7 +53,6 @@ class NewsCategories:
 
     @classmethod
     def categorize(cls, title: str) -> str:
-        """Kategoryzuje newsy na podstawie słów kluczowych w tytule"""
         if not title:
             return 'other'
             
@@ -72,7 +65,6 @@ class NewsCategories:
 class NewsFormatter:
     @staticmethod
     def generate_random_date() -> datetime:
-        """Generuje losową datę z ostatnich 7 dni"""
         now = datetime.utcnow()
         random_days = random.uniform(0, 7)
         random_minutes = random.randint(0, 1440)  # losowe minuty w ciągu dnia
@@ -80,7 +72,6 @@ class NewsFormatter:
 
     @staticmethod
     def format_article(article: Dict[str, Any], source: str) -> Optional[Dict[str, Any]]:
-        """Formatuje pojedynczy artykuł do standardowego formatu"""
         try:
             if not isinstance(article, dict):
                 return None
@@ -107,14 +98,10 @@ class NewsFormatter:
             return None
 
 def get_news_with_sentiment(ticker: str) -> Dict[str, Any]:
-    """
-    Pobiera newsy i analizuje ich sentyment
-    """
     try:
         if not ticker or not isinstance(ticker, str):
             raise ValueError("Nieprawidłowy ticker")
 
-        # Inicjalizacja struktur danych
         news_articles: List[Dict[str, Any]] = []
         categorized_news: Dict[str, List[Dict[str, Any]]] = {
             'earnings': [],
@@ -124,12 +111,10 @@ def get_news_with_sentiment(ticker: str) -> Dict[str, Any]:
             'other': []
         }
 
-        # Pobieranie newsów
         try:
             stock = yf.Ticker(ticker)
             news_data = stock.news or []
             
-            # Dodatkowe źródło - Yahoo Finance API
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }
@@ -142,7 +127,6 @@ def get_news_with_sentiment(ticker: str) -> Dict[str, Any]:
             print(f"Błąd pobierania newsów: {str(e)}")
             news_data = []
 
-        # Przetwarzanie newsów
         for article in news_data:
             formatted_article = NewsFormatter.format_article(article, 'Yahoo Finance')
             if formatted_article:
@@ -150,7 +134,6 @@ def get_news_with_sentiment(ticker: str) -> Dict[str, Any]:
                 category = formatted_article['category']
                 categorized_news[category].append(formatted_article)
 
-        # Jeśli nie mamy newsów, dodajemy przykładowy
         if not news_articles:
             default_article = {
                 'title': f'Brak dostępnych newsów dla {ticker}',
@@ -167,7 +150,6 @@ def get_news_with_sentiment(ticker: str) -> Dict[str, Any]:
             news_articles.append(default_article)
             categorized_news['other'].append(default_article)
 
-        # Sortowanie newsów po dacie
         for category in categorized_news:
             categorized_news[category].sort(
                 key=lambda x: x['publishedAt'],
@@ -179,7 +161,6 @@ def get_news_with_sentiment(ticker: str) -> Dict[str, Any]:
             reverse=True
         )
 
-        # Obliczanie statystyk
         stats = {
             'total_news': len(news_articles),
             'average_sentiment': sum(article['sentiment']['score'] for article in news_articles) / len(news_articles) if news_articles else 0,

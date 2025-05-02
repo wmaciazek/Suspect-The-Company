@@ -24,7 +24,6 @@ def predict_stock_prices(ticker, periods=30, start_date="2000-01-01"):
     try:
         df = fetch_historical_data(ticker, start_date=start_date)
 
-        # Obsługa MultiIndex dla kolumn, jeśli występuje
         if isinstance(df.columns, pd.MultiIndex):
             if 'Close' in df.columns.get_level_values(0):
                 close_col = [col for col in df.columns if col[0] == 'Close'][0]
@@ -44,7 +43,7 @@ def predict_stock_prices(ticker, periods=30, start_date="2000-01-01"):
         if y.empty or len(y) < 10:
             raise ValueError(f"Za mało danych historycznych do prognozy dla {ticker} (min. 10 punktów).")
 
-        # Zmienione parametry modelu SARIMAX
+        # parametry
         model = SARIMAX(y,
                        order=(3, 1, 2),
                        seasonal_order=(1, 1, 1, 12),
@@ -53,10 +52,9 @@ def predict_stock_prices(ticker, periods=30, start_date="2000-01-01"):
                       )
         model_fit = model.fit(disp=False)
         
-        # Generowanie predykcji z przedziałami ufności
         forecast_result = model_fit.get_forecast(steps=periods)
         forecast = forecast_result.predicted_mean
-        conf_int = forecast_result.conf_int(alpha=0.05)  # 95% przedział ufności
+        conf_int = forecast_result.conf_int(alpha=0.05)  # 100-0,5 = przedzial ufnosci
 
         last_date = df['date'].iloc[-1]
         future_dates = [last_date + timedelta(days=i) for i in range(1, periods + 1)]
@@ -66,8 +64,8 @@ def predict_stock_prices(ticker, periods=30, start_date="2000-01-01"):
             prediction_data.append({
                 'date': future_dates[i].date().isoformat(),
                 'value': float(forecast.iloc[i]),
-                'lower_bound': float(conf_int.iloc[i][0]),  # Zmiana z 'lower y' na indeks 0
-                'upper_bound': float(conf_int.iloc[i][1])   # Zmiana z 'upper y' na indeks 1
+                'lower_bound': float(conf_int.iloc[i][0]), 
+                'upper_bound': float(conf_int.iloc[i][1])   
             })
 
         historical_data = []

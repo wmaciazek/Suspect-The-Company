@@ -10,9 +10,6 @@ routes = Blueprint('routes', __name__)
 
 @routes.route('/api/stock_data_by_ticker', methods=['GET'])
 def stock_data_by_ticker_endpoint():
-    """
-    Endpoint do pobierania danych po tickerze
-    """
     ticker = request.args.get('ticker')
     period = request.args.get('period', '1mo')
     interval = request.args.get('interval', '1d')
@@ -31,9 +28,6 @@ def stock_data_by_ticker_endpoint():
 
 @routes.route('/api/stock_data_by_company_name', methods=['GET'])
 def stock_data_by_company_name_endpoint():
-    """
-    Endpoint do pobierania danych po nazwie firmy
-    """
     company_name = request.args.get('name')
     period = request.args.get('period', '1mo')
     interval = request.args.get('interval', '1d')
@@ -119,7 +113,6 @@ def translate_text():
             'error': str(e)
         }), 500
 
-# Dodaj tę nową trasę do routes.py
 @routes.route('/api/investbot', methods=['GET'])
 def investbot_endpoint():
     ticker = request.args.get('ticker')

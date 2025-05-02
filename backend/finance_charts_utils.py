@@ -11,7 +11,6 @@ from datetime import datetime, timedelta
 class StockDataFetcher:
     def __init__(self):
         self.cache = {}
-        # Ustawienia API
         api_key = os.getenv('GOOGLE_API_KEY')
         if api_key:
             try:
@@ -25,7 +24,6 @@ class StockDataFetcher:
             print("Ostrzeżenie: Brak GOOGLE_API_KEY")
             self.model = None
 
-        # Mapowanie znanych firm do tickerów
         self.company_tickers = {
             'apple': 'AAPL',
             'microsoft': 'MSFT',
@@ -66,7 +64,6 @@ class StockDataFetcher:
             'zoom': 'ZM',
             'robinhood': 'HOOD',
             'coinbase': 'COIN',
-            # Polskie spółki
             'cd projekt': 'CDR.WA',
             'cdprojekt': 'CDR.WA',
             'pkn orlen': 'PKN.WA',
@@ -79,9 +76,6 @@ class StockDataFetcher:
         }
 
     def get_ticker_from_ai(self, company_name: str) -> Optional[str]:
-        """
-        Używa Google Gemini do znalezienia tickera na podstawie nazwy firmy
-        """
         if not self.model:
             print("Błąd: Brak skonfigurowanego modelu AI")
             return None
@@ -99,7 +93,6 @@ class StockDataFetcher:
             response = self.model.generate_content(prompt)
             result = response.text.strip()
             
-            # Usuń backticki i "json" jeśli występują
             result = result.replace('```json', '').replace('```', '').strip()
             
             try:
@@ -121,9 +114,6 @@ class StockDataFetcher:
             return None
 
     def verify_ticker(self, ticker: str, company_name: str) -> bool:
-        """
-        Weryfikuje czy ticker odpowiada nazwie firmy
-        """
         try:
             ticker_info = yf.Ticker(ticker)
             company_info = ticker_info.info
@@ -150,19 +140,13 @@ class StockDataFetcher:
             return False
 
     def get_stock_data(self, query: str, period: str = '1mo', interval: str = '1d') -> Optional[Dict[str, Any]]:
-        """
-        Pobiera dane giełdowe na podstawie tickera lub nazwy firmy
-        """
         try:
-            # Jeśli query wygląda jak ticker, użyj go bezpośrednio bez AI
             if re.match(r'^[A-Z0-9\.]{1,5}$', query):
                 ticker = query
                 return self.fetch_stock_data(ticker, period, interval, query)
                 
-            # Jeśli to nie ticker, spróbuj znaleźć w lokalnym mapowaniu
             ticker = self.company_tickers.get(query.lower())
             
-            # Jeśli nie znaleziono w mapowaniu, dopiero wtedy użyj AI
             if not ticker:
                 ticker = self.get_ticker_from_ai(query)
 
@@ -178,29 +162,22 @@ class StockDataFetcher:
             return None
 
     def fetch_stock_data(self, ticker: str, period: str, interval: str, original_query: str) -> Optional[Dict[str, Any]]:
-        """
-        Pobiera dane giełdowe z yfinance
-        """
         try:
-            # Pobieranie danych
             data = yf.download(ticker, period=period, interval=interval)
             
             if data.empty:
                 print(f"Brak danych dla tickera: {ticker}")
                 return None
 
-            # Przygotowanie danych
             data = data.reset_index()
             if isinstance(data.columns, pd.MultiIndex):
                 data.columns = ['_'.join(col).strip() for col in data.columns.values]
             else:
                 data.columns = [col.lower() for col in data.columns]
 
-            # Pobieranie informacji o walucie
             ticker_info = yf.Ticker(ticker)
             currency = ticker_info.info.get('currency', 'USD')
             
-            # Konwersja do USD jeśli potrzebne
             if currency != 'USD':
                 exchange_rate = self.get_exchange_rate(currency)
                 if exchange_rate:
@@ -209,16 +186,12 @@ class StockDataFetcher:
                         if col in data.columns:
                             data[col] *= exchange_rate
 
-            # Znajdź kolumnę z ceną zamknięcia
             close_col = next((col for col in data.columns if 'close' in col.lower()), None)
             if not close_col:
                 print(f"Nie znaleziono kolumny 'close' dla {ticker}")
                 return None
 
-            # Obliczanie SMA
             sma_50 = data[close_col].rolling(window=50).mean()
-            
-            # Pobierz więcej informacji o firmie
             info = ticker_info.info
             company_info = {
                 'name': info.get('longName', original_query),
@@ -244,9 +217,6 @@ class StockDataFetcher:
             return None
 
     def get_exchange_rate(self, from_currency: str, to_currency: str = 'USD') -> Optional[float]:
-        """
-        Pobiera kurs wymiany walut
-        """
         try:
             url = f'https://api.exchangerate-api.com/v4/latest/{from_currency}'
             response = requests.get(url)
@@ -257,16 +227,9 @@ class StockDataFetcher:
             return None
 
 def get_stock_data_by_ticker(ticker: str, period: str = '1mo', interval: str = '1d') -> Optional[Dict[str, Any]]:
-    """
-    Pobiera dane giełdowe bezpośrednio po tickerze (bez użycia AI)
-    """
     fetcher = StockDataFetcher()
-    # Bezpośrednie użycie fetch_stock_data z pominięciem szukania tickera
     return fetcher.fetch_stock_data(ticker, period, interval, ticker)
 
 def get_stock_data_by_company_name(company_name: str, period: str = '1mo', interval: str = '1d') -> Optional[Dict[str, Any]]:
-    """
-    Pobiera dane giełdowe po nazwie firmy (z użyciem AI jeśli potrzebne)
-    """
     fetcher = StockDataFetcher()
     return fetcher.get_stock_data(company_name, period, interval)

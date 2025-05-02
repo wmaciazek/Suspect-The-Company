@@ -10,14 +10,11 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 import warnings
 
-# Ignoruj ostrzeżenia deprecation
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
-# Ładowanie zmiennych środowiskowych
 load_dotenv()
 
-# Konfiguracja Gemini API
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 def get_stock_data(ticker, period="1y"):
@@ -33,15 +30,14 @@ def get_stock_data(ticker, period="1y"):
 
 def prepare_features(df):
     """Przygotuj cechy dla modeli ML"""
-    # Kopiuj dataframe
     data = df.copy()
     
-    # Oblicz wskaźniki techniczne
+    #wskaźniki techniczne
     data['SMA20'] = data['Close'].rolling(window=20).mean()  # średnia krocząca z 20 dni
     data['SMA50'] = data['Close'].rolling(window=50).mean()  # średnia krocząca z 50 dni
     data['SMA200'] = data['Close'].rolling(window=200).mean()  # średnia krocząca z 200 dni
     
-    # RSI (wskaźnik siły względnej)
+    # RSI
     delta = data['Close'].diff()
     gain = delta.where(delta > 0, 0)
     loss = -delta.where(delta < 0, 0)
@@ -50,7 +46,7 @@ def prepare_features(df):
     rs = avg_gain / avg_loss
     data['RSI'] = 100 - (100 / (1 + rs))
     
-    # MACD (Moving Average Convergence Divergence)
+    # MACD 
     data['EMA12'] = data['Close'].ewm(span=12, adjust=False).mean()
     data['EMA26'] = data['Close'].ewm(span=26, adjust=False).mean()
     data['MACD'] = data['EMA12'] - data['EMA26']
@@ -64,16 +60,10 @@ def prepare_features(df):
     data['BB_Lower'] = data['BB_Middle'] - (data['BB_Std'] * 2)
     data['BB_Width'] = (data['BB_Upper'] - data['BB_Lower']) / data['BB_Middle']
     
-    # Cel: 1 jeśli cena wzrośnie w ciągu następnych 5 dni, 0 w przeciwnym razie
     data['Target_5day'] = (data['Close'].shift(-5) > data['Close']).astype(int)
-    
-    # Stopa zwrotu dla modeli regresji
     data['Return_5day'] = data['Close'].pct_change(periods=5).shift(-5)
-    
-    # Usuń wartości NaN
     data.dropna(inplace=True)
     
-    # Sprawdź, czy mamy wystarczającą ilość danych
     if len(data) < 30:
         raise ValueError("Za mało danych do analizy. Potrzeba co najmniej 30 dni notowań.")
     
@@ -81,60 +71,46 @@ def prepare_features(df):
 
 def train_classification_model(data):
     """Trenuj model klasyfikacyjny do przewidywania kierunku ruchu ceny"""
-    # Cechy i cel
     features = ['SMA20', 'SMA50', 'SMA200', 'RSI', 'MACD', 'Signal', 'MACD_Hist', 'BB_Width']
     X = data[features].values
     y = data['Target_5day'].values
     
-    # Sprawdź, czy wszystkie cechy mają skończone wartości
     if not np.isfinite(X).all():
-        # Zastąp nieskończone wartości zerami
         X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
     
-    # Podział na zbiór treningowy i testowy (używamy podziału czasowego dla danych szeregów czasowych)
     split_idx = int(len(X) * 0.8)
     X_train, X_test = X[:split_idx], X[split_idx:]
     y_train, y_test = y[:split_idx], y[split_idx:]
     
-    # Standaryzuj cechy
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
     
-    # Trenuj model z parametrami kompatybilnymi z nowymi wersjami scikit-learn
     model = RandomForestClassifier(
         n_estimators=100, 
         random_state=42,
-        n_jobs=-1,  # Użyj wszystkich dostępnych rdzeni
-        max_samples=None  # Dostosowanie do nowej wersji scikit-learn
+        n_jobs=-1,
+        max_samples=None 
     )
     model.fit(X_train, y_train)
     
-    # Ewaluacja
     try:
         y_pred = model.predict(X_test)
         accuracy = accuracy_score(y_test, y_pred)
     except Exception as e:
-        print(f"Błąd podczas ewaluacji modelu klasyfikacji: {e}")
-        accuracy = 0.5  # Domyślna dokładność (jak zgadywanie)
+        accuracy = 0.5  # dokladnosc
     
     return model, scaler, accuracy, features
 
 def train_regression_model(data):
-    """Trenuj model regresji do przewidywania ceny"""
-    # Cechy i cel
     features = ['SMA20', 'SMA50', 'SMA200', 'RSI', 'MACD', 'Signal', 'MACD_Hist', 'BB_Width']
     X = data[features].values
     y = data['Return_5day'].values
     
-    # Sprawdź, czy wszystkie cechy mają skończone wartości
     if not np.isfinite(X).all():
-        # Zastąp nieskończone wartości zerami
         X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
     
-    # Sprawdź, czy cel ma skończone wartości
     if not np.isfinite(y).all():
-        # Zastąp nieskończone wartości średnią
         valid_y = y[np.isfinite(y)]
         if len(valid_y) > 0:
             mean_y = np.mean(valid_y)
@@ -142,22 +118,19 @@ def train_regression_model(data):
             mean_y = 0
         y = np.nan_to_num(y, nan=mean_y, posinf=mean_y, neginf=mean_y)
     
-    # Podział na zbiór treningowy i testowy (używamy podziału czasowego)
     split_idx = int(len(X) * 0.8)
     X_train, X_test = X[:split_idx], X[split_idx:]
     y_train, y_test = y[:split_idx], y[split_idx:]
     
-    # Standaryzuj cechy
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
     
-    # Trenuj model z parametrami kompatybilnymi z nowymi wersjami scikit-learn
     model = GradientBoostingRegressor(
         n_estimators=100,
         random_state=42,
         learning_rate=0.1,
-        max_depth=3  # Ograniczenie głębokości drzewa dla lepszej generalizacji
+        max_depth=3 #glebokosc drzewa
     )
     
     try:
@@ -168,7 +141,7 @@ def train_regression_model(data):
         mse = mean_squared_error(y_test, y_pred)
         mae = mean_absolute_error(y_test, y_pred)
     except Exception as e:
-        print(f"Błąd podczas trenowania modelu regresji: {e}")
+        print(f"Błąd regresji: {e}")
         model = None
         mse = 0
         mae = 0
@@ -176,26 +149,19 @@ def train_regression_model(data):
     return model, scaler, mse, mae, features
 
 def prepare_backtest_data(data, predictions, returns):
-    """Przygotuj dane do backtestu dla frontendu"""
-    
-    # Daty dla osi X
     dates = data.index.strftime('%Y-%m-%d').tolist()
     
-    # Oblicz wartości portfela dla strategii AI
     initial_value = 1000
     current_value = initial_value
     portfolio_values = [initial_value]
     
-    # Tylko inwestuj gdy prognoza jest 1 (wzrost)
     for i in range(1, len(predictions)):
-        if i < len(returns):  # Zabezpieczenie przed przekroczeniem zakresu
+        if i < len(returns):  
             if predictions[i-1] == 1:
-                # Jeśli przewidzieliśmy wzrost, inwestujemy i uzyskujemy faktyczny zwrot
                 if np.isfinite(returns[i]):
                     current_value *= (1 + returns[i])
             portfolio_values.append(current_value)
     
-    # Oblicz strategię buy & hold
     buy_hold_values = [initial_value]
     current_buy_hold = initial_value
     
@@ -206,7 +172,6 @@ def prepare_backtest_data(data, predictions, returns):
                 current_buy_hold *= (1 + daily_return)
             buy_hold_values.append(current_buy_hold)
     
-    # Przytnij do tej samej długości
     min_length = min(len(portfolio_values), len(buy_hold_values), len(dates))
     portfolio_values = portfolio_values[:min_length]
     buy_hold_values = buy_hold_values[:min_length]
@@ -219,8 +184,7 @@ def prepare_backtest_data(data, predictions, returns):
     }
 
 def calculate_risk_metrics(data, predictions, returns):
-    """Oblicz wskaźniki ryzyka dla strategii inwestycyjnej"""
-    # Filtruj zwroty na podstawie prognoz
+    #ryzyko!
     strategy_returns = []
     
     for i in range(1, min(len(predictions), len(returns))):
@@ -229,18 +193,15 @@ def calculate_risk_metrics(data, predictions, returns):
         else:
             strategy_returns.append(0)
     
-    # Oblicz wskaźniki
+    #wskaźniki
     if len(strategy_returns) > 0 and np.std(strategy_returns) != 0:
         sharpe_ratio = np.mean(strategy_returns) / np.std(strategy_returns)
     else:
         sharpe_ratio = 0
     
-    # Obliczenie maksymalnego drawdown
     max_drawdown = 0
     peak = 1000
     trough = 1000
-    
-    # Symuluj portfel dla obliczenia maksymalnego drawdown
     portfolio = 1000
     
     for ret in strategy_returns:
@@ -255,12 +216,12 @@ def calculate_risk_metrics(data, predictions, returns):
             if current_drawdown > max_drawdown:
                 max_drawdown = current_drawdown
     
-    # Oblicz win rate (procent zyskownych transakcji)
+    # winrate
     win_count = sum(1 for ret in strategy_returns if ret > 0)
     total_trades = sum(1 for ret in strategy_returns if ret != 0)
     win_rate = win_count / total_trades if total_trades > 0 else 0
     
-    # Oblicz średni zwrot na transakcję
+    # zwrot
     non_zero_returns = [r for r in strategy_returns if r != 0]
     avg_return = np.mean(non_zero_returns) * 100 if non_zero_returns else 0
     
@@ -273,7 +234,6 @@ def calculate_risk_metrics(data, predictions, returns):
     }
 
 def generate_ai_insights(ticker, data, prediction_accuracy, risk_metrics):
-    """Generuj porady inwestycyjne używając Google Gemini"""
     try:
         company = yf.Ticker(ticker)
         info = company.info
@@ -281,7 +241,6 @@ def generate_ai_insights(ticker, data, prediction_accuracy, risk_metrics):
         sector = info.get('sector', 'Nieznany')
         industry = info.get('industry', 'Nieznana')
         
-        # Pobierz aktualne wartości, zabezpieczając się przed błędami
         current_price = data['Close'].iloc[-1] if 'Close' in data and len(data) > 0 else 0
         sma50 = data['SMA50'].iloc[-1] if 'SMA50' in data and len(data) > 0 else 0
         sma200 = data['SMA200'].iloc[-1] if 'SMA200' in data and len(data) > 0 else 0
@@ -325,7 +284,6 @@ def generate_ai_insights(ticker, data, prediction_accuracy, risk_metrics):
             return response.text
         except Exception as ai_error:
             print(f"Błąd AI: {ai_error}")
-            # Fallback - prosta analiza techniczna bez AI
             if current_price > sma50 and sma50 > sma200 and rsi < 70:
                 return "Analiza techniczna wskazuje na trend wzrostowy. Cena powyżej średnich kroczących 50 i 200 dni, co jest pozytywnym sygnałem. RSI nie wskazuje na wykupienie rynku."
             elif current_price < sma50 and sma50 < sma200 and rsi > 30:
@@ -337,41 +295,31 @@ def generate_ai_insights(ticker, data, prediction_accuracy, risk_metrics):
         return f"Nie udało się wygenerować porad AI: {str(e)}"
 
 def get_investment_advice(ticker):
-    """Główna funkcja generująca porady inwestycyjne z analizą ryzyka i backtestami"""
+    #porady inwestycyjne
     try:
-        # Pobierz dane i przygotuj cechy
         stock_data = get_stock_data(ticker)
         prepared_data = prepare_features(stock_data)
         
-        # Trenuj modele
         classification_model, class_scaler, accuracy, class_features = train_classification_model(prepared_data)
         regression_model, reg_scaler, mse, mae, reg_features = train_regression_model(prepared_data)
         
-        # Wykonaj prognozy dla backtestu
         X_backtest = prepared_data[class_features].values
         X_backtest_scaled = class_scaler.transform(X_backtest)
         
-        # Sprawdź, czy dane wejściowe są odpowiednie
         if not np.isfinite(X_backtest_scaled).all():
             X_backtest_scaled = np.nan_to_num(X_backtest_scaled)
             
         predictions = classification_model.predict(X_backtest_scaled)
-        
-        # Przygotuj dane do backtestu
         backtest_data = prepare_backtest_data(prepared_data, predictions, prepared_data['Return_5day'].values)
-        
-        # Oblicz wskaźniki ryzyka
         risk_metrics = calculate_risk_metrics(prepared_data, predictions, prepared_data['Return_5day'].values)
         
-        # Generuj porady AI
+        # porady AI
         insights = generate_ai_insights(ticker, prepared_data, accuracy, risk_metrics)
         
-        # Wykonaj bieżącą prognozę
         try:
             current_features = prepared_data[class_features].iloc[-1:].values
             current_features_scaled = class_scaler.transform(current_features)
             
-            # Sprawdź, czy dane wejściowe są odpowiednie
             if not np.isfinite(current_features_scaled).all():
                 current_features_scaled = np.nan_to_num(current_features_scaled)
                 
@@ -379,7 +327,6 @@ def get_investment_advice(ticker):
             current_pred_proba = classification_model.predict_proba(current_features_scaled)[0]
             max_confidence = float(max(current_pred_proba) * 100)
             
-            # Prognoza oczekiwanego zwrotu
             if regression_model:
                 current_return_pred = regression_model.predict(current_features_scaled)[0]
             else:
@@ -390,7 +337,6 @@ def get_investment_advice(ticker):
             max_confidence = 50.0
             current_return_pred = 0
         
-        # Przygotuj dane techniczne do wysłania do frontendu
         try:
             technical_data = {
                 'close': float(prepared_data['Close'].iloc[-1]),
@@ -404,7 +350,6 @@ def get_investment_advice(ticker):
                 'bb_lower': float(prepared_data['BB_Lower'].iloc[-1])
             }
         except Exception as tech_error:
-            print(f"Błąd podczas przygotowywania danych technicznych: {tech_error}")
             technical_data = {
                 'close': 0.0,
                 'sma20': 0.0,
@@ -417,7 +362,6 @@ def get_investment_advice(ticker):
                 'bb_lower': 0.0
             }
         
-        # Przygotuj odpowiedź
         response = {
             'ticker': ticker,
             'current_price': float(prepared_data['Close'].iloc[-1]),
@@ -435,5 +379,5 @@ def get_investment_advice(ticker):
         return response
     
     except Exception as e:
-        print(f"Główny błąd: {e}")
+        print(f"błąd: {e}")
         return {'error': str(e)}

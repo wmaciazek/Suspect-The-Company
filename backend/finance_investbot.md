@@ -1,15 +1,4 @@
-# InvestBot - AI Doradca Inwestycyjny
-
-## Spis treści
-1. [Opis ogólny](#opis-ogólny)
-2. [Funkcjonalności](#funkcjonalności)
-3. [Jak to działa](#jak-to-działa)
-4. [Szczegółowy opis funkcji](#szczegółowy-opis-funkcji)
-5. [Wymagania](#wymagania)
-6. [Instalacja](#instalacja)
-7. [Zastrzeżenia](#zastrzeżenia)
-
-## Opis ogólny
+# InvestBot - AI Doradca Inwestycyjny## Opis ogólny
 
 InvestBot to system sztucznej inteligencji zaprojektowany do analizy danych giełdowych i generowania porad inwestycyjnych. Wykorzystuje uczenie maszynowe, analizę techniczną i AI do przewidywania potencjalnych ruchów cen akcji i dostarczania spersonalizowanych rekomendacji inwestycyjnych.
 
@@ -105,22 +94,6 @@ Generuje tekstowe porady inwestycyjne przy użyciu Google Gemini.
 Główna funkcja, która wykonuje całą analizę inwestycyjną dla danego tickera.
 - **Argumenty**: ticker (symbol spółki)
 - **Zwraca**: słownik z kompleksową analizą inwestycyjną
-
-## Wymagania
-
-Plik `finance_investbot.py` wymaga następujących bibliotek:
-- numpy
-- pandas
-- yfinance
-- scikit-learn
-- datetime
-- python-dotenv
-- google-generativeai
-
-## Instalacja
-
-1. Upewnij się, że masz zainstalowany Python 3.6 lub nowszy.
-2. Zainstaluj wymagane pakiety:
 
 ```bash
 pip install numpy pandas yfinance scikit-learn python-dotenv google-generativeai
