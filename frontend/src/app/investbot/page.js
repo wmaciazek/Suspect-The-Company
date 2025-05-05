@@ -8,7 +8,6 @@ import { useAuth } from '@/providers/AuthProvider';
 import Chart from 'chart.js/auto';
 import dynamic from 'next/dynamic';
 
-// Importujemy dynamicznie, by upewnić się że komponent renderuje się tylko po stronie klienta
 const InvestmentAdvisor = dynamic(() => import('@/components/InvestmentAdvisor'), {
   ssr: false,
   loading: () => <div className="h-[300px] bg-gray-800 rounded-lg animate-pulse"></div>
@@ -34,20 +33,17 @@ export default function InvestBot() {
     }
   }, [searchParams]);
 
-  // Funkcja renderująca wykres
   useEffect(() => {
     if (advice && advice.backtest_data && chartRef.current) {
-      // Zniszcz poprzedni wykres, jeśli istnieje
       if (chartInstance.current) {
         chartInstance.current.destroy();
       }
       
-      // Utwórz nowy wykres
       const ctx = chartRef.current.getContext('2d');
       chartInstance.current = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: advice.backtest_data.dates.slice(-60), // Ostatnie 60 dni dla lepszej czytelności
+          labels: advice.backtest_data.dates.slice(-60), 
           datasets: [
             {
               label: 'Strategia AI',
@@ -126,7 +122,6 @@ export default function InvestBot() {
       });
     }
     
-    // Cleanup
     return () => {
       if (chartInstance.current) {
         chartInstance.current.destroy();
@@ -134,7 +129,6 @@ export default function InvestBot() {
     };
   }, [advice]);
 
-  // Funkcja do ustalania rekomendacji
   const getRecommendation = (prediction, confidence) => {
     if (prediction === 'WZROST' && confidence > 70) {
       return {
@@ -199,7 +193,6 @@ export default function InvestBot() {
     }
   };
 
-  // Funkcja do formatowania liczby jako wartość pieniężna
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pl-PL', {
       style: 'currency',
@@ -208,36 +201,26 @@ export default function InvestBot() {
     }).format(value);
   };
 
-  // Funkcja do formatowania procentów
   const formatPercent = (value) => {
     return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
   };
 
-  // Funkcja do wyodrębniania kluczowych fragmentów analizy AI
   const extractKeySections = (text) => {
     if (!text) return [];
-    
-    // Podziel tekst na akapity
     const paragraphs = text.split('\n\n').filter(p => p.trim().length > 0);
-    
-    // Określ, które sekcje są ważne
     const keyParagraphs = [];
-    
-    // Główne sekcje, które chcemy uwzględnić
     const keyTerms = [
       'Ogólna ocena', 'Podsumowanie', 'Rekomendacja', 
       'Perspektywa krótkoterminowa', 'Perspektywa długoterminowa',
       'Mocne strony', 'Ryzyka', 'Wnioski'
     ];
     
-    // Dla każdego akapitu sprawdź czy zawiera kluczowe terminy
     paragraphs.forEach(paragraph => {
       if (keyTerms.some(term => paragraph.includes(term))) {
         keyParagraphs.push(paragraph);
       }
     });
     
-    // Jeśli nie znaleziono żadnych kluczowych akapitów, weź pierwsze 2-3 akapity
     if (keyParagraphs.length === 0) {
       return paragraphs.slice(0, Math.min(3, paragraphs.length));
     }
@@ -366,7 +349,7 @@ export default function InvestBot() {
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span>Przewaga nad "kup i trzymaj":</span>
+                  <span>Przewaga nad kup i trzymaj:</span>
                   <span className={`text-xl font-bold ${advice.backtest_data.ai_strategy[advice.backtest_data.ai_strategy.length - 1] > 
                   advice.backtest_data.buy_hold[advice.backtest_data.buy_hold.length - 1] ? 'text-green-500' : 'text-red-500'}`}>
                     {(((advice.backtest_data.ai_strategy[advice.backtest_data.ai_strategy.length - 1] / 
@@ -422,7 +405,7 @@ export default function InvestBot() {
             <h3 className="text-xl font-bold mb-4">Porównanie strategii</h3>
             <p className="text-gray-400 mb-4">
               Wykres pokazuje wyniki strategii bazującej na rekomendacjach InvestBot w porównaniu do 
-              prostej strategii "kup i trzymaj" (ostatnie 60 dni).
+              prostej strategii kup i trzymaj (ostatnie 60 dni).
             </p>
             <div style={{ height: '350px' }} className="bg-gray-750 rounded-lg p-4">
               <canvas ref={chartRef}></canvas>

@@ -4,14 +4,11 @@ from routes import routes
 import os
 from dotenv import load_dotenv
 
-# Ustaw ścieżkę do pliku .env.local
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(current_dir, '.env.local')
 
-# Załaduj zmienne środowiskowe z .env.local
 load_dotenv(env_path)
 
-# Pobierz klucz API z .env.local
 api_key = os.getenv('GOOGLE_API_KEY')
 if not api_key:
     print("UWAGA: Brak GOOGLE_API_KEY w pliku .env.local")

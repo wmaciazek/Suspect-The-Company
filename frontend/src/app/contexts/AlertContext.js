@@ -179,7 +179,6 @@ export function AlertProvider({ children }) {
     }
   };
 
-  // Effect dla autoryzacji
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -194,22 +193,18 @@ export function AlertProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-  // Effect dla pobierania alertów
   useEffect(() => {
     if (userId) {
       fetchAlerts();
     }
   }, [userId]);
 
-  // Effect dla sprawdzania alertów
   useEffect(() => {
     if (userId && alerts.length > 0) {
       console.log('Setting up alerts checking. Current alerts:', alerts);
       
-      // Natychmiastowe sprawdzenie
       checkAlerts();
       
-      // Interwał sprawdzający
       const interval = setInterval(() => {
         checkAlerts();
       }, 30000);

@@ -43,7 +43,6 @@ const ProfitLossTracker = ({ portfolioData }) => {
     let hasError = false;
 
     try {
-      // Pobierz ceny dla wszystkich symboli równolegle
       const pricePromises = portfolioData.map(async (position) => {
         const price = await fetchStockPrice(position.symbol);
         if (price !== null) {

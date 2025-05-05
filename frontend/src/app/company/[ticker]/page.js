@@ -113,7 +113,7 @@ const CompanyDetails = () => {
     prediction: true,
     news: true,
     indicators: true,
-    comments: true // Dodane
+    comments: true 
   });
 
   const [widgetsOrder, setWidgetsOrder] = useState(DEFAULT_WIDGETS_ORDER);
@@ -149,7 +149,7 @@ const CompanyDetails = () => {
         return;
       }
   
-      if (data.c > 0) { // Sprawdź czy cena jest większa od 0
+      if (data.c > 0) { 
         const price = Number(data.c);
         console.log(`[Finnhub] Setting price to: $${price}`);
         setRealTimePrice(price);
@@ -198,7 +198,6 @@ const CompanyDetails = () => {
     localStorage.setItem('stockWidgetsOrder', JSON.stringify(widgetsOrder));
   }, [widgets, widgetsOrder]);
 
-  // Effect dla aktualizacji ceny w czasie rzeczywistym
   useEffect(() => {
     if (ticker) {
       console.log(`[Finnhub] Setting up real-time updates for ${ticker}`);
@@ -206,7 +205,7 @@ const CompanyDetails = () => {
       
       const interval = setInterval(() => {
         fetchRealTimePrice(ticker);
-      }, 30000); // Odświeżaj co 30 sekund
+      }, 30000); // 30s
       
       return () => {
         console.log(`[Finnhub] Cleaning up real-time updates for ${ticker}`);

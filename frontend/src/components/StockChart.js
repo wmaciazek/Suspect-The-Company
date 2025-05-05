@@ -272,16 +272,13 @@ const StockChart = ({ stockData, period, interval, realTimePrice }) => {
             const label = this.getLabelForValue(val);
             const totalPoints = this.chart.data.labels.length;
             
-            // Zawsze pokaż pierwszą i ostatnią etykietę
             if (index === 0 || index === totalPoints - 1) return label;
             
-            // Dla interwałów minutowych
             if (interval && interval.includes('min')) {
               const skipFactor = Math.ceil(totalPoints / 10);
               return index % skipFactor === 0 ? label : '';
             }
             
-            // Dla innych interwałów
             return index % 2 === 0 ? label : '';
           },
           font: {

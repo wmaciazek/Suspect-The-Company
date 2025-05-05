@@ -2,18 +2,15 @@ import { NextResponse } from 'next/server';
 import Sentiment from 'sentiment';
 
 async function analyzeNewsWithSentiment(ticker) {
-  // Funkcja pomocnicza do formatowania daty
   const formatDate = (date) => {
     return date.toISOString().replace('T', ' ').slice(0, 19);
   };
 
-  // Obecny czas
   const currentDate = formatDate(new Date());
   const yesterdayDate = formatDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
   const twoDaysAgoDate = formatDate(new Date(Date.now() - 48 * 60 * 60 * 1000));
 
   try {
-    // Przykładowe dane
     const mockNews = [
       {
         title: `Pozytywne wyniki kwartalne spółki ${ticker}`,
@@ -68,7 +65,6 @@ async function analyzeNewsWithSentiment(ticker) {
       }
     });
 
-    // Upewnij się, że zwracamy tablicę
     if (!Array.isArray(newsWithSentiment)) {
       throw new Error('News data is not in expected format');
     }

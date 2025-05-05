@@ -12,7 +12,6 @@ const PortfolioCharts = ({ portfolioData }) => {
   useEffect(() => {
     if (portfolioData.length === 0) return;
 
-    // Zniszcz poprzednie wykresy jeśli istnieją
     if (pieChart.current) {
       pieChart.current.destroy();
     }
@@ -20,12 +19,10 @@ const PortfolioCharts = ({ portfolioData }) => {
       barChart.current.destroy();
     }
 
-    // Przygotuj dane dla wykresów
     const labels = portfolioData.map(item => item.symbol);
     const values = portfolioData.map(item => item.totalValue);
     const colors = generateColors(portfolioData.length);
 
-    // Wykres kołowy
     pieChart.current = new Chart(pieChartRef.current, {
       type: 'doughnut',
       data: {
@@ -57,7 +54,6 @@ const PortfolioCharts = ({ portfolioData }) => {
       }
     });
 
-    // Wykres słupkowy
     barChart.current = new Chart(barChartRef.current, {
       type: 'bar',
       data: {

@@ -1,4 +1,3 @@
-// components/StockComments.js
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { db, auth } from '@/lib/firebase';
@@ -15,7 +14,6 @@ const StockComments = ({ ticker }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Nasłuchuj zmian w autoryzacji
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
@@ -32,7 +30,6 @@ const StockComments = ({ ticker }) => {
     return () => unsubscribe();
   }, []);
 
-  // Subskrybuj komentarze w czasie rzeczywistym
   useEffect(() => {
     if (!ticker) return;
 
@@ -63,7 +60,6 @@ const StockComments = ({ ticker }) => {
     return () => unsubscribe();
   }, [ticker]);
 
-  // Automatyczne scrollowanie przy nowych komentarzach
   useEffect(() => {
     scrollToBottom();
   }, [comments]);
@@ -132,8 +128,7 @@ const StockComments = ({ ticker }) => {
         </span>
       </h2>
       
-      <div className="flex flex-col h-[400px]"> {/* Container z fixed height */}
-        {/* Lista komentarzy ze scrollem */}
+      <div className="flex flex-col h-[400px]"> 
         <div className="flex-1 overflow-y-auto mb-4 space-y-4">
           {loading ? (
             <div className="animate-pulse space-y-4">
@@ -182,10 +177,9 @@ const StockComments = ({ ticker }) => {
               Bądź pierwszy który skomentuje {ticker}!
             </p>
           )}
-          <div ref={messagesEndRef} /> {/* Znacznik do auto-scrollowania */}
+          <div ref={messagesEndRef} /> 
         </div>
 
-        {/* Formularz zawsze na dole */}
         {user ? (
           <form onSubmit={handleSubmit} className="mt-auto">
             <div className="flex gap-4">

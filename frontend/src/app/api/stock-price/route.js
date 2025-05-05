@@ -1,4 +1,3 @@
-// app/api/stock-price/route.js
 import { NextResponse } from 'next/server';
 
 export async function GET(request) {
@@ -10,14 +9,12 @@ export async function GET(request) {
     return NextResponse.json({ error: 'Symbol is required' }, { status: 400 });
   }
 
-  // Przekształć symbol na wielkie litery
   symbol = symbol.toUpperCase();
 
   try {
     console.log(`[API] Fetching price for ${symbol}`);
     console.log(`[API] Using API key: ${apiKey ? 'Present' : 'Missing'}`);
 
-    // Dodaj token do URL zamiast w nagłówkach
     const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${apiKey}`;
     console.log(`[API] Calling URL: ${url}`);
 
@@ -30,7 +27,6 @@ export async function GET(request) {
     const data = await response.json();
     console.log(`[API] Received data:`, data);
 
-    // Sprawdź czy otrzymaliśmy prawidłowe dane
     if (data.c === 0 && data.o === 0 && data.h === 0 && data.l === 0) {
       console.error(`[API] Invalid data received for ${symbol}`);
       return NextResponse.json({ 
@@ -38,7 +34,6 @@ export async function GET(request) {
       }, { status: 400 });
     }
 
-    // Dodaj więcej informacji do odpowiedzi
     const processedData = {
       c: Number(data.c),          // Aktualna cena
       o: Number(data.o),          // Cena otwarcia

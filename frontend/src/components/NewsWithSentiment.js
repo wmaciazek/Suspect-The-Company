@@ -67,7 +67,7 @@ function NewsWithSentiment({ ticker }) {
       }
     } catch (error) {
       console.error('Błąd tłumaczenia:', error);
-      return text; // Zwracamy oryginalny tekst w przypadku błędu
+      return text; 
     }
   };
 
@@ -234,7 +234,6 @@ function NewsWithSentiment({ ticker }) {
 
   return (
     <div className="w-full">
-      {/* Panel kontrolny */}
       <div className="bg-gray-800 rounded-lg p-6 mb-4">
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
@@ -269,10 +268,8 @@ function NewsWithSentiment({ ticker }) {
         </div>
       </div>
 
-      {/* Treść analizy */}
       {isAnalysisVisible && (
         <div className="flex flex-col gap-4">
-          {/* Filtry czasowe */}
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="flex justify-end gap-2">
               {['7d', '14d', '30d'].map((range) => (
@@ -292,7 +289,6 @@ function NewsWithSentiment({ ticker }) {
             </div>
           </div>
 
-          {/* Wykres trendu */}
           <div className="bg-gray-800 rounded-lg p-4">
             <h3 className="text-lg font-medium text-white mb-4">
               Trend Sentymentu
@@ -336,7 +332,6 @@ function NewsWithSentiment({ ticker }) {
             </div>
           </div>
 
-          {/* Lista newsów */}
           <Tab.Group>
             <Tab.List className="flex space-x-2 bg-gray-800 p-2 rounded-lg overflow-x-auto">
               {Object.entries(categoryLabels).map(([category, label]) => (
@@ -427,7 +422,6 @@ function NewsWithSentiment({ ticker }) {
         </div>
       )}
 
-      {/* Stopka i przycisk zamknięcia */}
       {isAnalysisVisible && (
         <div className="mt-4 bg-gray-800 rounded-lg">
           <div className="p-4">

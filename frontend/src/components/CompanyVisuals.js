@@ -22,7 +22,6 @@ const CompanyVisuals = ({ ticker, companyName: initialCompanyName }) => {
     'META': 'meta.com',
     'TSLA': 'tesla.com',
     'NVDA': 'nvidia.com',
-    // dodaj więcej znanych domen
   };
 
   useEffect(() => {
@@ -33,13 +32,11 @@ const CompanyVisuals = ({ ticker, companyName: initialCompanyName }) => {
         setLoading(true);
         const description = await getCompanyDescription(ticker);
         
-        // Próbuj znaleźć nazwę firmy w opisie
         const nameMatch = description?.match(/\*\*(.*?)\*\*/);
         let name = nameMatch?.[1]
           ?.replace(/Inc\.|Corporation|Corp\.|Limited|Ltd\.|Pełna nazwa:|,/gi, '')
           ?.trim();
 
-        // Jeśli nie znaleziono nazwy w opisie, użyj domyślnej
         if (!name || name.length < 2) {
           name = initialCompanyName || ticker.toUpperCase();
         }

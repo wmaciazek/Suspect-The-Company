@@ -58,7 +58,6 @@ const StockPrediction = ({ ticker }) => {
 
     const workbook = XLSX.utils.book_new();
     
-    // Przygotuj dane historyczne
     const historicalWorksheet = XLSX.utils.json_to_sheet(
       filteredHistoricalData.map(d => ({
         Data: d.date,
@@ -67,7 +66,6 @@ const StockPrediction = ({ ticker }) => {
     );
     XLSX.utils.book_append_sheet(workbook, historicalWorksheet, "Dane historyczne");
 
-    // Przygotuj dane predykcyjne
     const predictionWorksheet = XLSX.utils.json_to_sheet(
       predictionData.predictionData.map(d => ({
         Data: d.date,
@@ -78,7 +76,6 @@ const StockPrediction = ({ ticker }) => {
     );
     XLSX.utils.book_append_sheet(workbook, predictionWorksheet, "Predykcja");
 
-    // Zapisz plik
     const fileName = `${ticker}_prediction_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   };
@@ -89,15 +86,12 @@ const StockPrediction = ({ ticker }) => {
     try {
       const pdf = new jsPDF();
       
-      // Dodaj tytuł
       pdf.setFontSize(16);
       pdf.text(`Predykcja cen dla ${ticker}`, 20, 20);
       
-      // Dodaj informacje o dacie generowania
       pdf.setFontSize(10);
       pdf.text(`Wygenerowano: ${new Date().toLocaleString()}`, 20, 30);
       
-      // Użyj autoTable bezpośrednio
       pdf.autoTable({
         head: [['Data', 'Cena historyczna']],
         body: filteredHistoricalData.map(d => [
@@ -109,7 +103,6 @@ const StockPrediction = ({ ticker }) => {
         margin: { top: 40 },
       });
       
-      // Dodaj dane predykcyjne na nowej stronie
       pdf.addPage();
       pdf.autoTable({
         head: [['Data', 'Predykcja', 'Górny przedział', 'Dolny przedział']],
@@ -122,7 +115,6 @@ const StockPrediction = ({ ticker }) => {
         headStyles: { fillColor: [66, 66, 66] },
       });
 
-      // Zapisz wykres jako obrazek i dodaj go do PDF
       const chartCanvas = document.querySelector('canvas');
       if (chartCanvas) {
         const chartImage = chartCanvas.toDataURL('image/jpeg', 1.0);
@@ -306,7 +298,6 @@ const StockPrediction = ({ ticker }) => {
             <option value={12}>Ostatni rok</option>
           </select>
           
-          {/* Przyciski eksportu */}
           <div className="flex space-x-2">
             <button
               onClick={exportToExcel}

@@ -13,36 +13,28 @@ export default function InvestmentAdvisor({ advice, onPlayComplete }) {
   const [isReady, setIsReady] = useState(false);
   const mouthUpdateIntervalRef = useRef(null);
 
-  // Pozostały kod pozostaje bez zmian...
   
-  // Przygotuj tekst do mowy z porady inwestycyjnej
   useEffect(() => {
     if (advice && advice.ai_insights) {
-      // Przygotuj skróconą wersję porady do syntezatora mowy
       const fullText = advice.ai_insights;
       
-      // Znajdź najważniejsze sekcje porady
       let summaryText = '';
       
-      // Szukaj ogólnej oceny
       const assessmentMatch = fullText.match(/(?:Ogólna ocena|Ocena)(?:\s*:?\s*)([^\.]+)\./i);
       if (assessmentMatch && assessmentMatch[1]) {
         summaryText += `Ogólna ocena dla spółki ${advice.ticker}: ${assessmentMatch[1]}. `;
       }
       
-      // Szukaj perspektywy krótkoterminowej
       const shortTermMatch = fullText.match(/(?:Perspektywa krótkoterminowa|Krótkoterminowo)(?:\s*:?\s*)([^\.]+)\./i);
       if (shortTermMatch && shortTermMatch[1]) {
         summaryText += `Perspektywa krótkoterminowa: ${shortTermMatch[1]}. `;
       }
       
-      // Szukaj rekomendacji
       const recommendationMatch = fullText.match(/(?:Rekomendacja|Podsumowanie)(?:\s*:?\s*)([^\.]+)\./i);
       if (recommendationMatch && recommendationMatch[1]) {
         summaryText += `Rekomendacja: ${recommendationMatch[1]}.`;
       }
       
-      // Jeśli nie znaleziono żadnych sekcji, użyj pierwszych dwóch zdań
       if (!summaryText) {
         const sentences = fullText.split('.');
         if (sentences.length >= 2) {
@@ -52,16 +44,13 @@ export default function InvestmentAdvisor({ advice, onPlayComplete }) {
         }
       }
       
-      // Dodaj wprowadzenie
       const finalText = `Witaj! Jestem Twoim wirtualnym doradcą inwestycyjnym. Oto moja analiza dla spółki ${advice.ticker}. ${summaryText}`;
       setText(finalText);
       setIsReady(true);
     }
   }, [advice]);
   
-  // Funkcja generowania mowy za pomocą Web Speech API
   const generateSpeech = () => {
-    // Kod obsługi Web Speech API pozostaje bez zmian...
     if (!text || typeof window === 'undefined' || !window.speechSynthesis) {
       console.error('Synteza mowy niedostępna');
       return;
@@ -70,17 +59,13 @@ export default function InvestmentAdvisor({ advice, onPlayComplete }) {
     setIsPlaying(true);
     setIsSpeaking(true);
     
-    // Zatrzymaj poprzednią mowę, jeśli istnieje
     window.speechSynthesis.cancel();
     
-    // Utwórz nową instancję mowy
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Znajdź polski głos
     const voices = window.speechSynthesis.getVoices();
     const polishVoice = voices.find(voice => voice.lang.includes('pl'));
     
-    // Ustaw głos - preferuj polski, jeśli dostępny
     if (polishVoice) {
       utterance.voice = polishVoice;
     }
@@ -89,11 +74,8 @@ export default function InvestmentAdvisor({ advice, onPlayComplete }) {
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
     
-    // Obsługa zdarzeń
     utterance.onstart = () => {
-      // Rozpocznij animację poruszania ustami w sposób losowy
       mouthUpdateIntervalRef.current = setInterval(() => {
-        // Losowy kształt ust podczas mówienia (1-14, omijamy 0, które jest ciszą)
         setCurrentMouthShape(Math.floor(Math.random() * 14) + 1);
       }, 150);
     };
@@ -118,11 +100,9 @@ export default function InvestmentAdvisor({ advice, onPlayComplete }) {
       setIsPlaying(false);
     };
     
-    // Rozpocznij mowę
     window.speechSynthesis.speak(utterance);
   };
 
-  // Obsługa zatrzymania mowy
   const stopSpeaking = () => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -137,7 +117,6 @@ export default function InvestmentAdvisor({ advice, onPlayComplete }) {
     setIsPlaying(false);
   };
 
-  // Czyszczenie przy odmontowaniu komponentu
   useEffect(() => {
     return () => {
       if (mouthUpdateIntervalRef.current) {
@@ -156,14 +135,13 @@ export default function InvestmentAdvisor({ advice, onPlayComplete }) {
         <Canvas shadows>
           <color attach="background" args={['#1e293b']} />
           
-          {/* Ustawienie kamery wyżej i skierowanej w dół */}
           <PerspectiveCamera 
             makeDefault 
-            position={[0, 6, 8]} // Ustawienie kamery wyżej i dalej od modelu
+            position={[0, 6, 8]} 
             fov={50} 
             near={0.1} 
             far={1000}
-            rotation={[-0.4, 0, 0]} // Lekkie pochylenie kamery w dół
+            rotation={[-0.4, 0, 0]}
           />
           
           {/* Lepsze oświetlenie */}
@@ -179,10 +157,8 @@ export default function InvestmentAdvisor({ advice, onPlayComplete }) {
             castShadow
           />
           
-          {/* Renderuj oryginalny model */}
           <AdvisorAvatar isSpeaking={isSpeaking} visemeId={currentMouthShape} />
           
-          {/* OrbitControls z bardziej ograniczonymi opcjami */}
           <OrbitControls
             enablePan={false}
             enableZoom={false}
@@ -194,14 +170,12 @@ export default function InvestmentAdvisor({ advice, onPlayComplete }) {
             maxAzimuthAngle={Math.PI / 6} // Ograniczenie obrotu w prawo
           />
           
-          {/* Dodaj płaszczyznę jako podłogę dla lepszego efektu wizualnego */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3, 0]} receiveShadow>
             <planeGeometry args={[30, 30]} />
             <meshStandardMaterial color="#1e293b" />
           </mesh>
         </Canvas>
         
-        {/* Przyciski pozostają bez zmian */}
         {!isPlaying && isReady && (
           <button 
             onClick={generateSpeech}

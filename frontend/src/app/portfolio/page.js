@@ -124,10 +124,9 @@ const PortfolioPage = () => {
         .map(position => ({
           ...position,
           avgPrice: position.totalCost / position.shares,
-          totalValue: position.totalCost // Docelowo powinno być obliczane na podstawie aktualnych cen
+          totalValue: position.totalCost
         }));
 
-      // Aktualizacja podsumowania portfolio
       totalPortfolioValue = portfolioArray.reduce((sum, pos) => sum + pos.totalValue, 0);
       totalPortfolioCost = portfolioArray.reduce((sum, pos) => sum + pos.totalCost, 0);
       totalShares = portfolioArray.reduce((sum, pos) => sum + pos.shares, 0);
@@ -139,7 +138,6 @@ const PortfolioPage = () => {
         uniqueStocks: portfolioArray.length
       });
 
-      // Sortowanie danych
       const sortedData = [...portfolioArray].sort((a, b) => {
         const multiplier = sortConfig.direction === 'asc' ? 1 : -1;
         if (typeof a[sortConfig.key] === 'string') {
